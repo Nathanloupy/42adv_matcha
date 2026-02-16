@@ -1,15 +1,15 @@
-service:
+services:
   backend:
     container_name: backend
     build: backend/
     env_file: .env
     volumes:
-      - "backend/app:/app"
+      - "./backend/app:/app"
     restart: "on-failure"
   frontend:
     container_name: frontend
     build: frontend/
     env_file: .env
     volumes:
-      - "frontend/app:/app"
+      - "./frontend/app:/app"
     restart: "on-failure"
