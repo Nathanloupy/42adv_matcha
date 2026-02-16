@@ -9,8 +9,12 @@ def initiliaze_database() -> None:
 	with Session(ENGINE) as session:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS users (
-				id SERIAL PRIMARY KEY,
-				name VARCHAR(10) NOT NULL
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				username TEXT NOT NULL,
+				password TEXT NOT NULL,
+				email TEXT NOT NULL,
+				surname TEXT NOT NULL,
+				firstname TEXT NOT NULL
 			);
 		"""))
 		session.commit()
