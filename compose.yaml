@@ -5,6 +5,8 @@ services:
     env_file: .env
     volumes:
       - "./backend/app:/app"
+    ports:
+      - "8000:8000"
     restart: "on-failure"
   frontend:
     container_name: frontend
