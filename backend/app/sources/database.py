@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-DATABASE_URL = f"sqlite:///database.db"
+DATABASE_URL = f"sqlite:///includes/database.db"
 CONNECT_ARGS = {"check_same_thread": False}
 ENGINE = create_engine(DATABASE_URL, connect_args=CONNECT_ARGS)
 
