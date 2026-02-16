@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+body {
+  background: linear-gradient(to bottom, theme(--color-slate-50), theme(--color-slate-300));
+  min-height: 100vh;
+}
+
 @theme {
   --font-jaini: "Jaini", serif;
 }
