@@ -1,8 +1,7 @@
-from typing import Annotated
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
-from sqlalchemy import text
-from .database import *
+from .database import initiliaze_database
+from .routers import auth
 from .routers import users
 
 @asynccontextmanager
@@ -11,8 +10,8 @@ async def lifespan(app: FastAPI):
 	yield
 
 app: object = FastAPI(lifespan=lifespan)
+app.include_router(auth.router)
 app.include_router(users.router)
-session_dep = Annotated[Session, Depends(get_database_session)]
 
 @app.get("/")
 async def root():
