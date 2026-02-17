@@ -10,8 +10,14 @@ services:
     restart: "on-failure"
   frontend:
     container_name: frontend
-    build: frontend/
+    build:
+      context: frontend/
+      target: build #TODO: delete for prod
     env_file: .env
     volumes:
       - "./frontend/app:/app"
+      - /app/node_modules
+    ports:
+      - "30001:5173" #TODO: replace by 80 for prod
+    entrypoint: ["npm", "run", "dev", "--", "--host", "0.0.0.0"] #TODO: delete for prod
     restart: "on-failure"
