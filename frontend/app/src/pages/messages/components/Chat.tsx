@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+
 interface ChatProps {
   name: string
   id: number
@@ -7,8 +9,6 @@ interface ChatProps {
   time: string
   unread: boolean
 }
-
-import { useNavigate } from 'react-router-dom'
 
 export type { ChatProps }
 
@@ -20,8 +20,15 @@ function LastMessageSentArrow({ className }: { className?: string }) {
     )
 }
 
-export default function Chat(props: ChatProps) {
-    const { name, id, avatar, userLastMessageSender, lastMessage, time, unread } = props
+export default function Chat({
+	name,
+	id,
+	avatar,
+	userLastMessageSender,
+	lastMessage,
+	time,
+	unread,
+}: ChatProps) {
     const navigate = useNavigate()
 
     return (
@@ -29,7 +36,7 @@ export default function Chat(props: ChatProps) {
         <div className="relative shrink-0 overflow-visible">
             <img src={avatar} alt={name} className="w-16 h-16 rounded-full object-cover shadow-md/20"/>
             {unread && <>
-                <span className="absolute top-1/2 -translate-y-1/2 -right-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-rose-500"/>
+                <span className="absolute top-1/2 -translate-y-1/2 -right-1 w-2 h-2 rounded-full bg-linear-to-br from-rose-400 to-rose-800 border border-rose-500"/>
                 <span className="absolute top-1/2 -translate-y-1/2 -right-1 w-2 h-2 rounded-full bg-rose-400 animate-pulse opactity-75"/>
             </>}
         </div>
