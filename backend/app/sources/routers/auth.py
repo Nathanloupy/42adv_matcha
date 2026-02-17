@@ -12,11 +12,6 @@ from .. import dependencies
 
 router: APIRouter = APIRouter()
 
-# Todo: change secret key
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-TOKEN_EXPIRE_MINUTES = 60
-ALGORITHM = "HS256"
-
 class Token(BaseModel):
 	access_token: str
 	token_type: str
@@ -30,11 +25,11 @@ class Signup(BaseModel):
 
 def generate_token(data: dict) -> str:
 	to_encode: dict = data
-	expire: datetime = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_MINUTES)
+	expire: datetime = datetime.now(timezone.utc) + timedelta(minutes=dependencies.jwt_token_expire)
 	to_encode.update({"exp": expire})
-	return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+	return jwt.encode(to_encode, dependencies.jwt_secret, algorithm=dependencies.jwt_algorithm)
 
-@router.post("/signup/", tags=["auth"])
+@router.post("/signup", tags=["auth"])
 async def signup(session: dependencies.session, signup: Signup):
 	try:
 		query = text("""
@@ -58,7 +53,7 @@ async def signup(session: dependencies.session, signup: Signup):
 		session.rollback()
 		raise HTTPException(status_code=400)
 
-@router.post("/login/", tags=["auth"])
+@router.post("/login", tags=["auth"])
 async def login(session: dependencies.session, login: dependencies.oauth2_request_form):
 	try:
 		query = text("SELECT * FROM users WHERE username = :username")
