@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -22,6 +23,17 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+=======
+import Header from './components/Header'
+import Footer from './components/Footer'
+
+export default function App() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+
+      <main className="flex-1 text-center">
+>>>>>>> da6fdcf (fix: conflict in .gitignore)
       </main>
 
       <Footer />
