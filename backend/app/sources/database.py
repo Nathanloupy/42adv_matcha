@@ -10,9 +10,9 @@ def initiliaze_database() -> None:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS users (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				username TEXT NOT NULL,
+				username TEXT UNIQUE NOT NULL,
 				password TEXT NOT NULL,
-				email TEXT NOT NULL,
+				email TEXT UNIQUE NOT NULL,
 				surname TEXT NOT NULL,
 				firstname TEXT NOT NULL
 			);
