@@ -5,7 +5,6 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-<<<<<<< HEAD
   server: {
     proxy: {
       '/api': {
@@ -19,6 +18,4 @@ export default defineConfig({
       '@assets': '/src/assets'
     }
   }
-=======
->>>>>>> da6fdcf (fix: conflict in .gitignore)
 })
