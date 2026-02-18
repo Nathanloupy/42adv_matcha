@@ -6,6 +6,9 @@ import Messages from './pages/messages/Messages'
 import Conversation from './pages/messages/Conversation'
 import Likes from './pages/likes/Likes'
 import Profile from './pages/Profile'
+import SignIn from './pages/auth/SignIn'
+import SignUp from './pages/auth/SignUp'
+import ResetPassword from './pages/auth/ResetPassword'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -20,6 +23,9 @@ export default function App() {
           <Route path="/messages/:id" element={<Conversation />} />
           <Route path="/likes" element={<Likes />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
