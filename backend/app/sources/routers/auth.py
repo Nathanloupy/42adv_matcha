@@ -100,4 +100,4 @@ async def verify(session: dependencies.session, token: str):
 	except Exception as exception:
 		session.rollback()
 		raise HTTPException(status_code=400, detail=str(exception))
-	return {"message": token}
+	return {"message": "email is now verified"}
