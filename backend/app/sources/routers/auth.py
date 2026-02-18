@@ -57,11 +57,11 @@ async def signup(session: dependencies.session, signup: Signup):
 			raise Exception("pwnedpassword API seems unreachable")
 		if sha1_password[5:] in response.text or len(signup.password) < 8:
 			raise Exception("password is too weak")
+		token = generate_token({"sub": signup.email})
+		await send_email(signup.email, "matcha email confirmation", f"http://localhost:8000/verify?token={token}")
 		signup.password = dependencies.password_hash.hash(signup.password)
 		session.execute(query, signup.model_dump())
 		session.commit()
-		token = generate_token({"sub": signup.email})
-		await send_email(signup.email, "matcha email confirmation", f"http://localhost:8000/verify?token={token}")
 	except IntegrityError as exception:
 		session.rollback()
 		raise HTTPException(status_code=400, detail="account already exist")
@@ -79,7 +79,8 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 		user = result.fetchone()
 		if not dependencies.password_hash.verify(login.password, user.password):
 			raise Exception("password is does not match")
-		if user.verified is False:
+		print(user.verified)
+		if user.verified == False:
 			raise Exception("user does not have a verified email, check your mail box")
 		token = generate_token({"sub": user.username})
 		return Token(access_token=token, token_type="bearer")
