@@ -14,7 +14,8 @@ def initiliaze_database() -> None:
 				password TEXT NOT NULL,
 				email TEXT UNIQUE NOT NULL,
 				surname TEXT NOT NULL,
-				firstname TEXT NOT NULL
+				firstname TEXT NOT NULL,
+				verified BOOLEAN DEFAULT 0
 			);
 		"""))
 		session.commit()
