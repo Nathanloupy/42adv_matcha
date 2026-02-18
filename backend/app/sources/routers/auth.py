@@ -3,12 +3,17 @@ from typing import Annotated
 from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from pwdlib import PasswordHash
 import jwt
 from jwt.exceptions import InvalidTokenError
+import hashlib
+import requests
 
 from .. import dependencies
+
+PWNEDPASSWORDS_URL = "https://api.pwnedpasswords.com/range/"
 
 router: APIRouter = APIRouter()
 
@@ -31,7 +36,14 @@ def generate_token(data: dict) -> str:
 
 @router.post("/signup", tags=["auth"])
 async def signup(session: dependencies.session, signup: Signup):
+	sha1_password: str = hashlib.sha1(signup.password.encode("utf-8")).hexdigest().upper()
+
 	try:
+		response = requests.get(PWNEDPASSWORDS_URL + sha1_password[:5])
+		if response.status_code != 200:
+			raise Exception("error fetching pwnedpassword API")
+		if sha1_password[5:] in response.text or len(signup.password) < 8:
+			raise Exception("password is too weak")
 		query = text("""
 			INSERT INTO users (username, password, email, surname, firstname) VALUES (
 				:username,
@@ -49,9 +61,12 @@ async def signup(session: dependencies.session, signup: Signup):
 			"firstname": signup.firstname
 		})
 		session.commit()
-	except Exception:
+	except IntegrityError as exception:
 		session.rollback()
-		raise HTTPException(status_code=400)
+		raise HTTPException(status_code=400, detail="account already exist")
+	except Exception as exception:
+		session.rollback()
+		raise HTTPException(status_code=400, detail=str(exception))
 
 @router.post("/login", tags=["auth"])
 async def login(session: dependencies.session, login: dependencies.oauth2_request_form):
