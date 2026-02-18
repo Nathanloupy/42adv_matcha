@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi_mail import MessageSchema
 import os
 from typing import Annotated
@@ -83,7 +84,16 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 		if user.verified == False:
 			raise Exception("user does not have a verified email, check your mail box")
 		token = generate_token({"sub": user.username})
-		return Token(access_token=token, token_type="bearer")
+		response = JSONResponse(content={"message": "ok"})
+		response.set_cookie(
+			key="access_token",
+			value=token,
+			httponly=True,
+			secure=False, #TODO: replace later to True when enabling HTTPS
+			samesite="strict",
+			max_age=dependencies.jwt_token_expire * 60,
+		)
+		return response
 	except Exception as exception:
 		raise HTTPException(status_code=400, detail=str(exception))
 

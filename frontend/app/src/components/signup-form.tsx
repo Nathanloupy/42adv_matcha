@@ -20,10 +20,10 @@ import { Input } from "@/components/ui/input"
 interface SignUpFormProps extends Omit<React.ComponentProps<"div">, "onSubmit"> {
   onSubmit: (data: {
     username: string
-    email: string
-    firstname: string
-    surname: string
     password: string
+    email: string
+    surname: string
+    firstname: string
   }) => void
   isLoading?: boolean
   error?: { message: string } | null
