@@ -14,7 +14,7 @@ app: object = FastAPI(lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(users.router)
 origins = [
-		"http://localhost:30001",
+		"http://localhost:30001", #TODO: change later for prod
 ]
 
 app.add_middleware(
