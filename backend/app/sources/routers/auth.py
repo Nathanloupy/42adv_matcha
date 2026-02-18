@@ -79,6 +79,8 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 		user = result.fetchone()
 		if not dependencies.password_hash.verify(login.password, user.password):
 			raise Exception("password is does not match")
+		if user.verified is False:
+			raise Exception("user does not have a verified email, check your mail box")
 		token = generate_token({"sub": user.username})
 		return Token(access_token=token, token_type="bearer")
 	except Exception as exception:
