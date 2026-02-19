@@ -59,7 +59,7 @@ async def signup(session: dependencies.session, signup: Signup):
 		if sha1_password[5:] in response.text or len(signup.password) < 8:
 			raise Exception("password is too weak")
 		token = generate_token({"sub": signup.email})
-		await send_email(signup.email, "matcha email confirmation", f"http://localhost:8000/verify?token={token}")
+		await send_email(signup.email, "matcha email confirmation", dependencies.frontend_url + f"verify-email?token={token}")
 		signup.password = dependencies.password_hash.hash(signup.password)
 		session.execute(query, signup.model_dump())
 		session.commit()
@@ -80,7 +80,6 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 		user = result.fetchone()
 		if not dependencies.password_hash.verify(login.password, user.password):
 			raise Exception("password is does not match")
-		print(user.verified)
 		if user.verified == False:
 			raise Exception("user does not have a verified email, check your mail box")
 		token = generate_token({"sub": user.username})
@@ -97,7 +96,7 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 	except Exception as exception:
 		raise HTTPException(status_code=400, detail=str(exception))
 
-@router.get("/verify", tags=["auth"])
+@router.get("/verify-email", tags=["auth"])
 async def verify(session: dependencies.session, token: str):
 	query: TextClause = text("UPDATE users SET verified = 1 WHERE email = :email")
 
@@ -105,10 +104,46 @@ async def verify(session: dependencies.session, token: str):
 		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
 		email = payload.get("sub")
 		if email is None:
-			raise ValueError
+			raise Exception("token failed verification")
 		session.execute(query, {"email": email})
 		session.commit()
 	except Exception as exception:
 		session.rollback()
 		raise HTTPException(status_code=400, detail=str(exception))
 	return {"message": "email is now verified"}
+
+@router.post("/request-reset-password", tags=["auth"])
+async def request_reset_password(session: dependencies.session, email: str):
+	query: TextClause = text("SELECT * FROM users WHERE email = :email")
+
+	try:
+		result = session.execute(query, {"email": email})
+		user = result.fetchone()
+		if user is None:
+			raise Exception("account does not exist")
+		token = generate_token({"sub": user.email})
+		await send_email(user.email, "matcha password reset request", dependencies.frontend_url + f"reset-password?token={token}")
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
+	return {"message": "password reset email as been sent"}
+
+@router.post("/reset-password", tags=["auth"])
+async def reset_password(session: dependencies.session, token: str, new_password: str):
+	sha1_password: str = hashlib.sha1(new_password.encode("utf-8")).hexdigest().upper()
+	query: TextClause = text("UPDATE users SET password = :new_password WHERE email = :email")
+
+	try:
+		response = requests.get(PWNEDPASSWORDS_URL + sha1_password[:5])
+		if sha1_password[5:] in response.text or len(new_password) < 8:
+			raise Exception("password is too weak")
+		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
+		email = payload.get("sub")
+		if email is None:
+			raise Exception("token failed verification")
+		new_password = dependencies.password_hash.hash(new_password)
+		session.execute(query, {"new_password": new_password, "email": email})
+		session.commit()
+	except Exception as exception:
+		session.rollback()
+		raise HTTPException(status_code=400, detail=str(exception))
+	return {"message": "password has been changed"}

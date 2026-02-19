@@ -17,8 +17,7 @@ password_hash: PasswordHash			= PasswordHash.recommended()
 token								= Annotated[str, Depends(oauth2_scheme)]
 session								= Annotated[Session, Depends(database.get_database_session)]
 oauth2_request_form					= Annotated[OAuth2PasswordRequestForm, Depends()]
-
-mail_config: ConnectionConfig	= ConnectionConfig(
+mail_config: ConnectionConfig		= ConnectionConfig(
 	MAIL_USERNAME=os.getenv("BACKEND_MAIL_USERNAME", "changeme@gmail.com"),
 	MAIL_PASSWORD=os.getenv("BACKEND_MAIL_PASSWORD", "changeme"),
 	MAIL_FROM=os.getenv("BACKEND_MAIL_FROM", "changeme@gmail.com"),
@@ -28,4 +27,5 @@ mail_config: ConnectionConfig	= ConnectionConfig(
 	MAIL_SSL_TLS=False,
 	USE_CREDENTIALS=True,
 )
-fast_mail: FastMail				= FastMail(mail_config)
+fast_mail: FastMail					= FastMail(mail_config)
+frontend_url: str = os.getenv("FONTEND_URL", "http://localhost:30001/")
