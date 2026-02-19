@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuthContext } from "@/contexts/AuthContext"
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
 
@@ -27,6 +28,7 @@ interface ResetPasswordData {
 export function useAuth() {
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<AuthError | null>(null)
+	const { setIsAuthenticated } = useAuthContext()
 	const navigate = useNavigate()
 
 	async function signin(data: SignInData) {
@@ -53,9 +55,10 @@ export function useAuth() {
 				)
 			}
 
-			navigate("/")
-		} catch (err) {
-			setError({ message: err instanceof Error ? err.message : "Sign in failed" })
+		setIsAuthenticated(true)
+		navigate("/")
+	} catch (err) {
+		setError({ message: err instanceof Error ? err.message : "Sign in failed" })
 		} finally {
 			setIsLoading(false)
 		}
