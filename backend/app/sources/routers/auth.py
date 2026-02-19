@@ -79,7 +79,7 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 		result = session.execute(query, {"username": login.username})
 		user = result.fetchone()
 		if not dependencies.password_hash.verify(login.password, user.password):
-			raise Exception("password is does not match")
+			raise Exception("password does not match")
 		if user.verified == False:
 			raise Exception("user does not have a verified email, check your mail box")
 		token = generate_token({"sub": user.username})
@@ -95,6 +95,17 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 		return response
 	except Exception as exception:
 		raise HTTPException(status_code=400, detail=str(exception))
+
+@router.get("/signout", tags=["auth"])
+async def signout():
+	response = JSONResponse(content={"message": "ok"})
+	response.delete_cookie(
+		key="access_token",
+		httponly=True,
+		secure=False, #TODO: replace later to True when enabling HTTPS
+		samesite="strict",
+	)
+	return response
 
 @router.get("/verify-email", tags=["auth"])
 async def verify(session: dependencies.session, token: str):
