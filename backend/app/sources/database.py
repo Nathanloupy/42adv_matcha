@@ -8,14 +8,91 @@ ENGINE = create_engine(DATABASE_URL, connect_args=CONNECT_ARGS)
 def initiliaze_database() -> None:
 	with Session(ENGINE) as session:
 		session.execute(text("""
-			CREATE TABLE IF NOT EXISTS users (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				username TEXT UNIQUE NOT NULL,
-				password TEXT NOT NULL,
-				email TEXT UNIQUE NOT NULL,
-				surname TEXT NOT NULL,
-				firstname TEXT NOT NULL,
-				verified BOOLEAN DEFAULT 0
+			CREATE TABLE IF NOT EXISTS "users" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"username" TEXT,
+				"password" TEXT,
+				"email" TEXT,
+				"firstname" TEXT,
+				"surname" TEXT,
+				"verified" BOOLEAN,
+				"age" INTEGER,
+				"gps" TEXT,
+				"fame" INTEGER,
+				"last_connection" DATETIME,
+				PRIMARY KEY("id"),
+				FOREIGN KEY ("id") REFERENCES "users_tags"("user_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_views"("user_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_likes"("user_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_blocks"("user_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_chats"("user_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_connected"("user_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_blocks"("other_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_views"("other_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_likes"("other_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_connected"("other_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_chats"("other_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION
+			);
+		"""))
+		session.execute(text("""
+			CREATE TABLE IF NOT EXISTS "users_tags" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL UNIQUE,
+				"tag" TEXT NOT NULL,
+				PRIMARY KEY("id")
+			);
+		"""))
+		session.execute(text("""
+			CREATE TABLE IF NOT EXISTS "users_views" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL UNIQUE,
+				"other_id" INTEGER NOT NULL,
+				PRIMARY KEY("id")
+			);
+		"""))
+		session.execute(text("""
+			CREATE TABLE IF NOT EXISTS "users_likes" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL UNIQUE,
+				"other_id" INTEGER NOT NULL,
+				PRIMARY KEY("id")
+			);
+		"""))
+		session.execute(text("""
+			CREATE TABLE IF NOT EXISTS "users_blocks" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL UNIQUE,
+				"other_id" INTEGER NOT NULL,
+				PRIMARY KEY("id")
+			);
+		"""))
+		session.execute(text("""
+			CREATE TABLE IF NOT EXISTS "users_connected" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL UNIQUE,
+				"other_id" INTEGER NOT NULL,
+				PRIMARY KEY("id")
+			);
+		"""))
+		session.execute(text("""
+			CREATE TABLE IF NOT EXISTS "users_chats" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL UNIQUE,
+				"other_id" INTEGER NOT NULL,
+				"time" TIMESTAMP NOT NULL,
+				"value" TEXT NOT NULL,
+				PRIMARY KEY("id")
 			);
 		"""))
 		session.commit()
