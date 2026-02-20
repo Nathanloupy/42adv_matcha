@@ -6,7 +6,11 @@ export default function ProtectedRoute({
 }: {
 	children: React.ReactNode;
 }) {
-	const { isAuthenticated } = useAuthContext();
+	const { isAuthenticated, isAuthLoading } = useAuthContext();
+
+	if (isAuthLoading) {
+		return null;
+	}
 
 	if (!isAuthenticated) {
 		return <Navigate to="/signin" replace />;

@@ -6,12 +6,12 @@ import heartIcon from "@assets/heart.svg";
 import editIcon from "@assets/edit.svg";
 
 export default function Footer() {
-	const { isAuthenticated } = useAuthContext();
+	const { isAuthenticated, isAuthLoading } = useAuthContext();
 
 	return (
 		<footer className="bg-slate-950 py-3 text-sm rounded-t-md">
 			<div
-				className={`grid grid-cols-4 items-center ${isAuthenticated ? "" : "invisible"}`}
+				className={`grid grid-cols-4 items-center ${!isAuthLoading && isAuthenticated ? "" : "invisible"}`}
 			>
 				<Link to="/" className="flex justify-center">
 					<img src={catIcon} className="h-9" alt="Search" />
