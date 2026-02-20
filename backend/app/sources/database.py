@@ -10,15 +10,15 @@ def initiliaze_database() -> None:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS "users" (
 				"id" INTEGER NOT NULL UNIQUE,
-				"username" TEXT,
+				"username" TEXT UNIQUE,
 				"password" TEXT,
-				"email" TEXT,
+				"email" TEXT UNIQUE,
 				"firstname" TEXT,
 				"surname" TEXT,
-				"verified" BOOLEAN,
+				"verified" BOOLEAN DEFAULT 0,
 				"age" INTEGER,
 				"gps" TEXT,
-				"fame" INTEGER,
+				"fame" INTEGER DEFAULT 0,
 				"last_connection" DATETIME,
 				PRIMARY KEY("id"),
 				FOREIGN KEY ("id") REFERENCES "users_tags"("user_id")
