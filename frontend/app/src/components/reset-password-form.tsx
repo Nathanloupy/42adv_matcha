@@ -15,7 +15,8 @@ interface ResetPasswordFormProps extends Omit<
 	React.ComponentProps<"div">,
 	"onSubmit"
 > {
-	onSubmit: (data: { email: string }) => void;
+	onSubmit: (data: { token: string; new_password: string }) => void;
+	token: string;
 	isLoading?: boolean;
 	error?: { message: string } | null;
 }
@@ -23,49 +24,82 @@ interface ResetPasswordFormProps extends Omit<
 export function ResetPasswordForm({
 	className,
 	onSubmit,
+	token,
 	isLoading,
 	error,
 	...props
 }: ResetPasswordFormProps) {
-	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+	const [validationError, setValidationError] = useState<string | null>(null);
 
 	function handleSubmit(e: FormEvent) {
 		e.preventDefault();
-		onSubmit({ email });
+		setValidationError(null);
+
+		if (password.length < 8) {
+			setValidationError("Password must be at least 8 characters long");
+			return;
+		}
+
+		if (password !== confirmPassword) {
+			setValidationError("Passwords do not match");
+			return;
+		}
+
+		onSubmit({ token, new_password: password });
 	}
 
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
 			<Card>
 				<CardHeader>
-					<CardTitle>Reset your password</CardTitle>
+					<CardTitle>Set your new password</CardTitle>
 					<CardDescription>
-						Enter your email to receive a link to reset your
-						password
+						Enter your new password below
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleSubmit}>
 						<FieldGroup>
 							<Field>
-								<FieldLabel htmlFor="email">Email</FieldLabel>
+								<FieldLabel htmlFor="password">
+									New password
+								</FieldLabel>
 								<Input
-									id="email"
-									type="email"
-									placeholder="cat@example.com"
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
+									id="password"
+									type="password"
+									value={password}
+									onChange={(e) =>
+										setPassword(e.target.value)
+									}
 									required
 								/>
 							</Field>
-							{error && (
+							<Field>
+								<FieldLabel htmlFor="confirm-password">
+									Confirm password
+								</FieldLabel>
+								<Input
+									id="confirm-password"
+									type="password"
+									value={confirmPassword}
+									onChange={(e) =>
+										setConfirmPassword(e.target.value)
+									}
+									required
+								/>
+							</Field>
+							{(validationError || error) && (
 								<p className="text-sm text-destructive">
-									{error.message}
+									{validationError ?? error?.message}
 								</p>
 							)}
 							<Field>
 								<Button type="submit" disabled={isLoading}>
-									{isLoading ? "Sending..." : "Send link"}
+									{isLoading
+										? "Resetting..."
+										: "Reset password"}
 								</Button>
 							</Field>
 						</FieldGroup>

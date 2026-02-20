@@ -9,7 +9,7 @@ export default function Footer() {
 	const { isAuthenticated } = useAuthContext();
 
 	return (
-		<footer className="bg-slate-950 py-3 text-sm">
+		<footer className="bg-slate-950 py-3 text-sm rounded-t-md">
 			<div
 				className={`grid grid-cols-4 items-center ${isAuthenticated ? "" : "invisible"}`}
 			>

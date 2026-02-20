@@ -21,8 +21,13 @@ interface SignUpData {
 	firstname: string
 }
 
-interface ResetPasswordData {
+interface RequestResetPasswordData {
 	email: string
+}
+
+interface ResetPasswordData {
+	token: string
+	new_password: string
 }
 
 export function useAuth() {
@@ -31,7 +36,7 @@ export function useAuth() {
 	const { setIsAuthenticated } = useAuthContext()
 	const navigate = useNavigate()
 
-	async function signin(data: SignInData) {
+	async function signIn(data: SignInData) {
 		setIsLoading(true)
 		setError(null)
 		try {
@@ -55,16 +60,16 @@ export function useAuth() {
 				)
 			}
 
-		setIsAuthenticated(true)
-		navigate("/")
-	} catch (err) {
-		setError({ message: err instanceof Error ? err.message : "Sign in failed" })
+			setIsAuthenticated(true)
+			navigate("/")
+		} catch (err) {
+			setError({ message: err instanceof Error ? err.message : "Sign in failed" })
 		} finally {
 			setIsLoading(false)
 		}
 	}
 
-	async function signup(data: SignUpData) {
+	async function signUp(data: SignUpData) {
 		setIsLoading(true)
 		setError(null)
 		try {
@@ -86,19 +91,87 @@ export function useAuth() {
 		}
 	}
 
+	async function signOut() {
+		try {
+			const response = await fetch(`${API_URL}/signout`, {
+				credentials: "include",
+			});
+
+			if (!response.ok) {
+				throw new Error("Sign out failed")
+			}
+
+			setIsAuthenticated(false)
+			navigate("/")
+		} catch (err) {
+			setError({
+				message: err instanceof Error ? err.message : "Sign out failed",
+			})
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	async function requestResetPassword(data: RequestResetPasswordData) {
+		setIsLoading(true)
+		setError(null)
+		try {
+			const params = new URLSearchParams({ email: data.email })
+			const response = await fetch(`${API_URL}/request-reset-password?${params}`, {
+				method: "POST",
+			})
+
+			if (!response.ok) {
+				const body = await response.json()
+				throw new Error(body.detail ?? "Password reset request failed")
+			}
+		} catch (err) {
+			setError({
+				message: err instanceof Error ? err.message : "Password reset request failed",
+			})
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	async function verifyEmail(token: string) {
+		setIsLoading(true)
+		setError(null)
+		try {
+			const params = new URLSearchParams({ token })
+			const response = await fetch(`${API_URL}/verify-email?${params}`)
+
+			if (!response.ok) {
+				const body = await response.json()
+				throw new Error(body.detail ?? "Email verification failed")
+			}
+		} catch (err) {
+			setError({
+				message: err instanceof Error ? err.message : "Email verification failed",
+			})
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
 	async function resetPassword(data: ResetPasswordData) {
 		setIsLoading(true)
 		setError(null)
 		try {
-			const response = await fetch(`${API_URL}/reset-password`, {
+			const params = new URLSearchParams({
+				token: data.token,
+				new_password: data.new_password,
+			})
+			const response = await fetch(`${API_URL}/reset-password?${params}`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(data),
 			})
 
 			if (!response.ok) {
-				throw new Error("Password reset failed")
+				const body = await response.json()
+				throw new Error(body.detail ?? "Password reset failed")
 			}
+
+			navigate("/signin")
 		} catch (err) {
 			setError({
 				message: err instanceof Error ? err.message : "Password reset failed",
@@ -108,5 +181,5 @@ export function useAuth() {
 		}
 	}
 
-	return { signin, signup, resetPassword, isLoading, error }
+	return { signIn, signUp, signOut, verifyEmail, requestResetPassword, resetPassword, isLoading, error }
 }

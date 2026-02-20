@@ -74,7 +74,7 @@ export function SignInForm({
 										Password
 									</FieldLabel>
 									<Link
-										to="/reset-password"
+										to="/request-reset-password"
 										className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
 									>
 										Forgot your password?
