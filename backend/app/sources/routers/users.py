@@ -21,6 +21,7 @@ class UpdateProfile(BaseModel):
 	gender: bool
 	sexual_preference: int
 	biography: str
+	gps: str
 
 @router.get("/users/me", tags=["users"])
 async def me(session: dependencies.session, request: Request):
@@ -46,10 +47,10 @@ async def me(session: dependencies.session, request: Request):
 	except Exception as exception:
 		raise HTTPException(status_code=400)
 
-@router.patch("/users/me/update", tags=["users"])
-async def me_update(session: dependencies.session, request: Request, update_profile: UpdateProfile):
+@router.patch("/users/me", tags=["users"])
+async def me_patch(session: dependencies.session, request: Request, update_profile: UpdateProfile):
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
-	query_tag: TextClause = text("UPDATE users SET email = :email, age = :age, firstname = :firstname, surname = :surname, gender = :gender, sexual_preference = :sexual_preference, biography = :biography WHERE username = :username")
+	query_tag: TextClause = text("UPDATE users SET email = :email, age = :age, firstname = :firstname, surname = :surname, gender = :gender, sexual_preference = :sexual_preference, biography = :biography, gps = :gps WHERE username = :username")
 
 	token = request.cookies.get("access_token")
 	if token is None:
@@ -75,6 +76,7 @@ async def me_update(session: dependencies.session, request: Request, update_prof
 			"gender": update_profile.gender,
 			"sexual_preference": update_profile.sexual_preference,
 			"biography": update_profile.biography,
+			"gps": update_profile.gps,
 			"username": user.username
 		})
 		session.commit()
