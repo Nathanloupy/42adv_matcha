@@ -72,30 +72,28 @@ export function ProfileCard({
 				<CardTitle>Profile</CardTitle>
 				<CardDescription>
 					Signed in as{" "}
-					<span className="font-semibold">
-						{profile.username}
-					</span>
+					<span className="font-semibold">{profile.username}</span>
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div className="mb-4 flex items-center justify-between rounded-md border border-border bg-muted/50 px-4 py-3">
-					<span className="text-sm text-muted-foreground">Fame rating</span>
-					<span className="text-lg font-semibold text-foreground">{profile.fame ?? 0}</span>
+					<span className="text-sm text-muted-foreground">
+						Fame rating
+					</span>
+					<span className="text-lg font-semibold text-foreground">
+						{profile.fame ?? 0}
+					</span>
 				</div>
 				<form onSubmit={handleSubmit}>
 					<FieldGroup>
 						<div className="grid grid-cols-3 gap-4">
 							<Field className="col-span-2">
-								<FieldLabel htmlFor="email">
-									Email
-								</FieldLabel>
+								<FieldLabel htmlFor="email">Email</FieldLabel>
 								<Input
 									id="email"
 									type="email"
 									value={email}
-									onChange={(e) =>
-										setEmail(e.target.value)
-									}
+									onChange={(e) => setEmail(e.target.value)}
 									required
 								/>
 							</Field>
@@ -137,9 +135,7 @@ export function ProfileCard({
 									id="surname"
 									type="text"
 									value={surname}
-									onChange={(e) =>
-										setSurname(e.target.value)
-									}
+									onChange={(e) => setSurname(e.target.value)}
 									required
 								/>
 							</Field>
@@ -151,18 +147,15 @@ export function ProfileCard({
 							<textarea
 								id="biography"
 								value={biography}
-								onChange={(e) =>
-									setBiography(e.target.value)
-								}
+								onChange={(e) => setBiography(e.target.value)}
 								rows={3}
+								maxLength={256}
 								className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none dark:bg-input/30"
 							/>
 						</Field>
 						<div className="grid grid-cols-2 gap-4">
 							<Field>
-								<FieldLabel htmlFor="gender">
-									Gender
-								</FieldLabel>
+								<FieldLabel htmlFor="gender">Gender</FieldLabel>
 								<select
 									id="gender"
 									value={gender ? "true" : "false"}
@@ -196,9 +189,7 @@ export function ProfileCard({
 							</Field>
 						</div>
 						{error && (
-							<p className="text-sm text-destructive">
-								{error}
-							</p>
+							<p className="text-sm text-destructive">{error}</p>
 						)}
 						<Field>
 							<Button
