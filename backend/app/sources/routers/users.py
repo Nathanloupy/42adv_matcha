@@ -24,11 +24,17 @@ async def me(session: dependencies.session, request: Request):
 		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
 		username = payload.get("sub")
 		if username is None:
-			raise ValueError
+			raise HTTPException(status_code=404)
 		token_data = TokenData(username=username)
 		result = session.execute(query, {"username": token_data.username})
 		user = result.fetchone()
-		return {"username": user.username, "verified": user.verified}
-	except Exception:
-		raise HTTPException(status_code=400)
+		if user is None:
+			raise HTTPException(status_code=404)
+		user = dict(user._mapping)
+		user.pop("password", None)
+		return user
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
 
