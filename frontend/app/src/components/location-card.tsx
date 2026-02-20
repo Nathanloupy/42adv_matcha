@@ -8,7 +8,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
 	getBrowserLocation,
@@ -143,16 +143,11 @@ export function LocationCard({
 							/>
 						</button>
 						<Field className="flex-1">
-							<FieldLabel htmlFor="location">
-								City / Address
-							</FieldLabel>
 							<Input
 								id="location"
 								type="text"
 								value={gpsDisplay}
-								onChange={(e) =>
-									setGpsDisplay(e.target.value)
-								}
+								onChange={(e) => setGpsDisplay(e.target.value)}
 								disabled={gpsActive || gpsLoading}
 								placeholder={
 									gpsActive
@@ -176,9 +171,7 @@ export function LocationCard({
 							(!gpsActive && !gpsDisplay.trim())
 						}
 					>
-						{gpsLoading
-							? "Locating..."
-							: "Update location"}
+						{gpsLoading ? "Locating..." : "Update location"}
 					</Button>
 				</div>
 			</CardContent>
