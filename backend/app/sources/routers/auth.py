@@ -70,7 +70,7 @@ async def signup(session: dependencies.session, signup: Signup):
 		raise HTTPException(status_code=400, detail="account already exist")
 	except Exception as exception:
 		session.rollback()
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 	return {"message": "ok"}
 
 
@@ -105,7 +105,7 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 		raise
 	except Exception as exception:
 		session.rollback()
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.get("/signout", tags=["auth"])
 async def signout():
@@ -126,12 +126,14 @@ async def verify_email(session: dependencies.session, token: str):
 		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
 		email = payload.get("sub")
 		if email is None:
-			raise Exception("token failed verification")
+			raise HTTPException(status_code=400, detail="token failed verification")
 		session.execute(query, {"email": email})
 		session.commit()
+	except HTTPException:
+		raise
 	except Exception as exception:
 		session.rollback()
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 	return {"message": "email is now verified"}
 
 @router.post("/request-reset-password", tags=["auth"])
@@ -148,7 +150,7 @@ async def request_reset_password(session: dependencies.session, email: str):
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 	return {"message": "password reset email as been sent"}
 
 @router.post("/reset-password", tags=["auth"])
@@ -171,5 +173,5 @@ async def reset_password(session: dependencies.session, token: str, new_password
 		raise
 	except Exception as exception:
 		session.rollback()
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 	return {"message": "password has been changed"}
