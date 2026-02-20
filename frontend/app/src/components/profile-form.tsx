@@ -1,21 +1,16 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { ProfileCard } from "@/components/profile-card";
+import { LocationCard } from "@/components/location-card";
 import type { ProfileData, UpdateProfileData } from "@/hooks/useProfile";
 
-interface ProfileFormProps
-	extends Omit<React.ComponentProps<"div">, "onSubmit"> {
+interface ProfileFormProps extends Omit<
+	React.ComponentProps<"div">,
+	"onSubmit"
+> {
 	profile: ProfileData;
 	onSubmit: (data: UpdateProfileData) => void;
+	onUpdateLocation: (gps: string) => void;
 	isLoading?: boolean;
 	error?: { message: string } | null;
 }
@@ -24,102 +19,42 @@ export function ProfileForm({
 	className,
 	profile,
 	onSubmit,
+	onUpdateLocation,
 	isLoading,
 	error,
 	...props
 }: ProfileFormProps) {
-	const [email, setEmail] = useState(profile.email);
-	const [firstname, setFirstname] = useState(profile.firstname);
-	const [surname, setSurname] = useState(profile.surname);
+	const lastActionRef = useRef<"profile" | "location">("profile");
 
-	useEffect(() => {
-		setEmail(profile.email);
-		setFirstname(profile.firstname);
-		setSurname(profile.surname);
-	}, [profile]);
+	const profileError =
+		error && lastActionRef.current === "profile" ? error.message : "";
+	const locationError =
+		error && lastActionRef.current === "location" ? error.message : "";
 
-	function handleSubmit(e: FormEvent) {
-		e.preventDefault();
-		onSubmit({ email, firstname, surname });
+	function handleProfileSubmit(data: UpdateProfileData) {
+		lastActionRef.current = "profile";
+		onSubmit(data);
 	}
 
-	const hasChanges =
-		email !== profile.email ||
-		firstname !== profile.firstname ||
-		surname !== profile.surname;
+	function handleLocationUpdate(gps: string) {
+		lastActionRef.current = "location";
+		onUpdateLocation(gps);
+	}
 
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
-			<Card>
-				<CardHeader>
-					<CardTitle>Profile</CardTitle>
-					<CardDescription>
-						Signed in as{" "}
-						<span className="font-semibold">
-							{profile.username}
-						</span>
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<form onSubmit={handleSubmit}>
-						<FieldGroup>
-							<Field>
-								<FieldLabel htmlFor="email">Email</FieldLabel>
-								<Input
-									id="email"
-									type="email"
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-									required
-								/>
-							</Field>
-							<div className="grid grid-cols-2 gap-4">
-								<Field>
-									<FieldLabel htmlFor="firstname">
-										First name
-									</FieldLabel>
-									<Input
-										id="firstname"
-										type="text"
-										value={firstname}
-										onChange={(e) =>
-											setFirstname(e.target.value)
-										}
-										required
-									/>
-								</Field>
-								<Field>
-									<FieldLabel htmlFor="surname">
-										Surname
-									</FieldLabel>
-									<Input
-										id="surname"
-										type="text"
-										value={surname}
-										onChange={(e) =>
-											setSurname(e.target.value)
-										}
-										required
-									/>
-								</Field>
-							</div>
-							{error && (
-								<p className="text-sm text-destructive">
-									{error.message}
-								</p>
-							)}
-							<Field>
-								<Button
-									type="submit"
-									disabled={isLoading || !hasChanges}
-								>
-									{isLoading ? "Saving..." : "Save changes"}
-								</Button>
-							</Field>
-						</FieldGroup>
-					</form>
-				</CardContent>
-			</Card>
+			<ProfileCard
+				profile={profile}
+				onSubmit={handleProfileSubmit}
+				isLoading={isLoading}
+				error={profileError}
+			/>
+			<LocationCard
+				initialGps={profile.gps ?? ""}
+				onUpdateLocation={handleLocationUpdate}
+				isLoading={isLoading}
+				error={locationError}
+			/>
 		</div>
 	);
 }

@@ -7,13 +7,25 @@ export interface ProfileData {
 	email: string
 	surname: string
 	firstname: string
+	age: number
 	verified: boolean
+	completed: boolean
+	fame: number
+	gps: string
+	biography: string
+	gender: boolean
+	sexual_preference: number
 }
 
 export interface UpdateProfileData {
 	email: string
 	surname: string
 	firstname: string
+	age: number
+	biography: string
+	gender: boolean
+	sexual_preference: number
+	gps: string
 }
 
 interface ProfileError {
@@ -54,7 +66,7 @@ export function useProfile() {
 		setError(null)
 		try {
 			const response = await fetch(`${API_URL}/users/me`, {
-				method: "PUT",
+				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
 				credentials: "include",
 				body: JSON.stringify(data),
@@ -77,5 +89,33 @@ export function useProfile() {
 		}
 	}
 
-	return { profile, fetchProfile, updateProfile, isLoading, error }
+	async function updateLocation(gps: string) {
+		setIsLoading(true)
+		setError(null)
+		try {
+			const response = await fetch(`${API_URL}/users/me`, {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include",
+				body: JSON.stringify({ gps }),
+			})
+
+			if (!response.ok) {
+				const body = await response.json()
+				throw new Error(body.detail ?? "Failed to update location")
+			}
+
+			setProfile((prev) =>
+				prev ? { ...prev, gps } : prev,
+			)
+		} catch (err) {
+			setError({
+				message: err instanceof Error ? err.message : "Failed to update location",
+			})
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	return { profile, fetchProfile, updateProfile, updateLocation, isLoading, error }
 }

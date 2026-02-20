@@ -3,7 +3,7 @@ import { ProfileForm } from "@/components/profile-form";
 import { useProfile } from "@/hooks/useProfile";
 
 export default function Profile() {
-	const { profile, fetchProfile, updateProfile, isLoading, error } =
+	const { profile, fetchProfile, updateProfile, updateLocation, isLoading, error } =
 		useProfile();
 	const calledRef = useRef(false);
 
@@ -38,6 +38,7 @@ export default function Profile() {
 				<ProfileForm
 					profile={profile}
 					onSubmit={updateProfile}
+					onUpdateLocation={updateLocation}
 					isLoading={isLoading}
 					error={error}
 				/>
