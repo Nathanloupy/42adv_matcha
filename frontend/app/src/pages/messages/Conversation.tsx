@@ -5,7 +5,7 @@ export default function Conversation() {
 
 	return (
 		<div className="flex flex-col items-center justify-center h-full">
-			<h2 className="text-2xl font-bold text-white">
+			<h2 className="text-2xl font-bold text-foreground">
 				Conversation #{id}
 			</h2>
 		</div>

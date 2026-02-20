@@ -45,7 +45,7 @@ export default function Chat({
 
 	return (
 		<div
-			className="flex items-center gap-3 px-4 cursor-pointer shadow-[inset_0_-1px_1px_0_rgba(0,0,0,0.05)]"
+			className="flex items-center gap-3 px-4 cursor-pointer shadow-[inset_0_-1px_1px_0_rgba(255,255,255,0.05)]"
 			onClick={() => navigate(`/messages/${id}`)}
 		>
 			<div className="relative shrink-0 overflow-visible">
@@ -63,20 +63,20 @@ export default function Chat({
 			</div>
 			<div className="flex flex-1 items-center gap-3 py-5">
 				<div className="flex flex-col">
-					<span className="font-semibold text-slate-950 truncate">
+					<span className="font-semibold text-foreground truncate">
 						{name}
 					</span>
 					<div className="flex flex-row items-center gap-1">
 						{userLastMessageSender ? (
-							<LastMessageSentArrow className="h-4 text-gray-400" />
+							<LastMessageSentArrow className="h-4 text-muted-foreground" />
 						) : null}
-						<p className="text-sm text-gray-400 truncate">
+						<p className="text-sm text-muted-foreground truncate">
 							{lastMessage}
 						</p>
 					</div>
 				</div>
 				<div className="flex flex-row ml-auto">
-					<span className="text-xs text-gray-500 shrink-0">
+					<span className="text-xs text-muted-foreground shrink-0">
 						{time}
 					</span>
 				</div>

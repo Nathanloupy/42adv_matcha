@@ -8,7 +8,7 @@ export default function Header() {
 	const { signOut } = useAuth();
 
 	return (
-		<header className="bg-slate-950 text-white px-5 py-3 flex items-center justify-between font-jaini rounded-b-sm">
+		<header className="bg-slate-950 text-white px-5 py-3 flex items-center justify-between font-jaini border-b border-border">
 			<Link to="/">
 				<h1 className="text-3xl font-bold"> Matcha(t)</h1>
 			</Link>
