@@ -112,7 +112,7 @@ def initiliaze_database() -> None:
 			);
 		"""))
 		session.commit()
-		os.makedirs("uploads", exist_ok=True)
+		os.makedirs("users_images", exist_ok=True)
 
 def get_database_session():
 	with Session(ENGINE) as session:
