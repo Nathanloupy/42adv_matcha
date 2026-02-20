@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import text
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
@@ -46,6 +47,8 @@ def initiliaze_database() -> None:
 				FOREIGN KEY ("id") REFERENCES "users_connected"("other_id")
 				ON UPDATE NO ACTION ON DELETE NO ACTION,
 				FOREIGN KEY ("id") REFERENCES "users_chats"("other_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION,
+				FOREIGN KEY ("id") REFERENCES "users_images"("user_id")
 				ON UPDATE NO ACTION ON DELETE NO ACTION
 			);
 		"""))
@@ -61,7 +64,7 @@ def initiliaze_database() -> None:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS "users_views" (
 				"id" INTEGER NOT NULL UNIQUE,
-				"user_id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
@@ -69,7 +72,7 @@ def initiliaze_database() -> None:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS "users_likes" (
 				"id" INTEGER NOT NULL UNIQUE,
-				"user_id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
@@ -77,7 +80,7 @@ def initiliaze_database() -> None:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS "users_blocks" (
 				"id" INTEGER NOT NULL UNIQUE,
-				"user_id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
@@ -85,7 +88,7 @@ def initiliaze_database() -> None:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS "users_connected" (
 				"id" INTEGER NOT NULL UNIQUE,
-				"user_id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
@@ -93,14 +96,23 @@ def initiliaze_database() -> None:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS "users_chats" (
 				"id" INTEGER NOT NULL UNIQUE,
-				"user_id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				"time" TIMESTAMP NOT NULL,
 				"value" TEXT NOT NULL,
 				PRIMARY KEY("id")
 			);
 		"""))
+		session.execute(text("""
+			CREATE TABLE IF NOT EXISTS "users_images" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL,
+				"filename" INTEGER NOT NULL,
+				PRIMARY KEY("id")
+			);
+		"""))
 		session.commit()
+		os.makedirs("uploads", exist_ok=True)
 
 def get_database_session():
 	with Session(ENGINE) as session:
