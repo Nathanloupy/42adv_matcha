@@ -1,0 +1,28 @@
+interface LikesProfileCardProps {
+	profileId: number;
+	firstname: string;
+	age: number;
+	picture: string;
+}
+
+export type { LikesProfileCardProps };
+
+export default function LikesProfileCard({
+	firstname,
+	age,
+	picture,
+}: LikesProfileCardProps) {
+	return (
+		<div
+			className="relative col-span-1 h-[33vh] m-1 rounded-sm overflow-hidden bg-cover bg-center"
+			style={{ backgroundImage: `url(${picture})` }}
+		>
+			<div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+			<div className="relative flex items-end h-full p-2">
+				<span className="text-white font-semibold drop-shadow-lg">
+					{firstname}, {age}
+				</span>
+			</div>
+		</div>
+	);
+}
