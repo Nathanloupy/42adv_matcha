@@ -25,7 +25,7 @@ export interface UpdateProfileData {
 	biography: string
 	gender: boolean
 	sexual_preference: number
-	gps: string
+	gps?: string
 }
 
 interface ProfileError {

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ProfileForm } from "@/components/profile-form";
+import { ProfileForm } from "./components/profile-form";
 import { useProfile } from "@/hooks/useProfile";
 
 export default function Profile() {

@@ -1,5 +1,5 @@
 import { useSearchParams, Link } from "react-router-dom";
-import { ResetPasswordForm } from "@/components/reset-password-form";
+import { ResetPasswordForm } from "./components/reset-password-form";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ResetPassword() {

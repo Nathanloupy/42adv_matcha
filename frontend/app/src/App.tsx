@@ -6,7 +6,7 @@ import Home from "./pages/Home";
 import Messages from "./pages/messages/Messages";
 import Conversation from "./pages/messages/Conversation";
 import Likes from "./pages/likes/Likes";
-import Profile from "./pages/Profile";
+import Profile from "./pages/profile/Profile";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import RequestResetPassword from "./pages/auth/RequestResetPassword";

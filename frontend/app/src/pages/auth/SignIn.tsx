@@ -1,4 +1,4 @@
-import { SignInForm } from "@/components/signin-form";
+import { SignInForm } from "./components/signin-form";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function SignIn() {

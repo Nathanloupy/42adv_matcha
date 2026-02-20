@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
-import { ProfileCard } from "@/components/profile-card";
-import { LocationCard } from "@/components/location-card";
+import { ProfileCard } from "./profile-card";
+import { LocationCard } from "./location-card";
 import type { ProfileData, UpdateProfileData } from "@/hooks/useProfile";
 
 interface ProfileFormProps extends Omit<

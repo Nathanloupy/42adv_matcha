@@ -1,4 +1,4 @@
-import { RequestResetPasswordForm } from "@/components/request-reset-password-form";
+import { RequestResetPasswordForm } from "./components/request-reset-password-form";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function RequestResetPassword() {
