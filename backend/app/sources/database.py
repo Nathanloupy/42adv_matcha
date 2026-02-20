@@ -16,10 +16,14 @@ def initiliaze_database() -> None:
 				"firstname" TEXT,
 				"surname" TEXT,
 				"verified" BOOLEAN DEFAULT 0,
-				"age" INTEGER,
+				"age" INTEGER DEFAULT 3,
+				"gender" BOOLEAN,
+				"sexual_preference" INTEGER DEFAULT 2,
+				"biography" VARCHAR(256),
 				"gps" TEXT,
 				"fame" INTEGER DEFAULT 0,
 				"last_connection" DATETIME,
+				"completed" BOOLEAN DEFAULT 0,
 				PRIMARY KEY("id"),
 				FOREIGN KEY ("id") REFERENCES "users_tags"("user_id")
 				ON UPDATE NO ACTION ON DELETE NO ACTION,
@@ -48,8 +52,9 @@ def initiliaze_database() -> None:
 		session.execute(text("""
 			CREATE TABLE IF NOT EXISTS "users_tags" (
 				"id" INTEGER NOT NULL UNIQUE,
-				"user_id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL,
 				"tag" TEXT NOT NULL,
+				UNIQUE("user_id", "tag"),
 				PRIMARY KEY("id")
 			);
 		"""))
