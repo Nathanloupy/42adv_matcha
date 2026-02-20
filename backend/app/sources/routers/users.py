@@ -1,9 +1,13 @@
+import os
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text, TextClause
 from sqlmodel import Session
+from datetime import datetime
+import aiofiles
+import base64
 import jwt
 
 from .. import dependencies
@@ -14,14 +18,14 @@ class TokenData(BaseModel):
 	username: str | None = None
 
 class UpdateProfile(BaseModel):
-	email: str
-	firstname: str
-	surname: str
-	age: int
-	gender: bool
-	sexual_preference: int
-	biography: str
-	gps: str
+	email: str | None = Field(default=None)
+	firstname: str | None = Field(default=None)
+	surname: str | None = Field(default=None)
+	age: int | None = Field(default=None)
+	gender: bool | None = Field(default=None)
+	sexual_preference: int | None = Field(default=None)
+	biography: str | None = Field(default=None)
+	gps: str | None = Field(default=None)
 
 @router.get("/users/me", tags=["users"])
 async def me(session: dependencies.session, request: Request):
@@ -50,7 +54,6 @@ async def me(session: dependencies.session, request: Request):
 @router.patch("/users/me", tags=["users"])
 async def me_patch(session: dependencies.session, request: Request, update_profile: UpdateProfile):
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
-	query_tag: TextClause = text("UPDATE users SET email = :email, age = :age, firstname = :firstname, surname = :surname, gender = :gender, sexual_preference = :sexual_preference, biography = :biography, gps = :gps WHERE username = :username")
 
 	token = request.cookies.get("access_token")
 	if token is None:
@@ -64,21 +67,18 @@ async def me_patch(session: dependencies.session, request: Request, update_profi
 		user = result.fetchone()
 		if user is None:
 			raise HTTPException(status_code=404)
-		if update_profile.age < 3 or update_profile.age > 100:
-			raise HTTPException(status_code=400)
-		if update_profile.sexual_preference not in [0, 1, 2]:
-			raise HTTPException(status_code=400)
-		session.execute(query_tag, {
-			"email": update_profile.email,
-			"firstname": update_profile.firstname,
-			"age": update_profile.age,
-			"surname": update_profile.surname,
-			"gender": update_profile.gender,
-			"sexual_preference": update_profile.sexual_preference,
-			"biography": update_profile.biography,
-			"gps": update_profile.gps,
-			"username": user.username
-		})
+		profile_dict: dict = dict(update_profile)
+		for key, value in profile_dict.items():
+			if value is None:
+				continue
+			if key == "age" and update_profile.age is not None:
+				if value < 3 or value > 100:
+					raise HTTPException(status_code=400)
+			elif key == "sexual_preference":
+				if value not in [0, 1, 2]:
+					raise HTTPException(status_code=400)
+			new_query: TextClause = text(f"UPDATE users SET {key} = :{key} WHERE username = :username")
+			session.execute(new_query, {key: value, "username": user.username})
 		session.commit()
 	except HTTPException:
 		raise
@@ -161,4 +161,102 @@ async def me_delete_tag(session: dependencies.session, request: Request, tag: st
 		raise
 	except Exception as exception:
 		raise HTTPException(status_code=400)
+	return {"message": "ok"}
+
+@router.get("/users/me/images", tags=["users"])
+async def me_get_image(session: dependencies.session, request: Request):
+	query: TextClause = text("SELECT * FROM users WHERE username = :username")
+	query_get_images: TextClause = text("SELECT * FROM users_images WHERE user_id = :user_id")
+
+	token = request.cookies.get("access_token")
+	if token is None:
+		raise HTTPException(status_code=401)
+	try:
+		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
+		username = payload.get("sub")
+		if username is None:
+			raise HTTPException(status_code=404)
+		result = session.execute(query, {"username": username})
+		user = result.fetchone()
+		if user is None:
+			raise HTTPException(status_code=404)
+		result = session.execute(query_get_images, {"user_id": user.id})
+		images = result.fetchall()
+		images_data: list[tuple[int, str]] = []
+		for image in images:
+			path: str = image[2]
+			with open(path, "rb") as file:
+				images_data.append((int(image[0]), base64.b64encode(file.read()).decode()))
+		return {"message": images_data}
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
+
+@router.post("/users/me/image", tags=["users"])
+async def me_add_image(session: dependencies.session, request: Request, image: UploadFile):
+	query: TextClause = text("SELECT * FROM users WHERE username = :username")
+	query_count_image: TextClause = text("SELECT COUNT(*) FROM users_images WHERE user_id = :user_id")
+	query_add_image: TextClause = text("INSERT INTO users_images (user_id, filename) VALUES (:user_id, :filename)")
+
+	token = request.cookies.get("access_token")
+	if token is None:
+		raise HTTPException(status_code=401)
+	try:
+		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
+		username = payload.get("sub")
+		if username is None:
+			raise HTTPException(status_code=404)
+		result = session.execute(query, {"username": username})
+		user = result.fetchone()
+		if user is None:
+			raise HTTPException(status_code=404)
+		result = session.execute(query_count_image, {"user_id": user.id})
+		count: int = 0
+		count += result.fetchone()[0]
+		if count >= 5:
+			raise HTTPException(status_code=403, detail="too much images uploaded")
+		elif image.filename.split(".")[-1] != "jpg":
+			raise HTTPException(status_code=400, detail="image format must ne jpg")
+		path = f"users_images/{user.id}-{count}.{image.filename.split(".")[-1]}"
+		async with aiofiles.open(path, "wb") as file:
+			await file.write(await image.read())
+		session.execute(query_add_image, {"user_id": user.id, "filename": path})
+		session.commit()
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
+	return {"message": "ok"}
+
+@router.delete("/users/me/image", tags=["users"])
+async def me_delete_image(session: dependencies.session, request: Request, id: int):
+	query: TextClause = text("SELECT * FROM users WHERE username = :username")
+	query_get_image: TextClause = text("SELECT * FROM users_images WHERE id = :id")
+	query_delete_image: TextClause = text("DELETE FROM users_images WHERE id = :id")
+
+	token = request.cookies.get("access_token")
+	if token is None:
+		raise HTTPException(status_code=401)
+	try:
+		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
+		username = payload.get("sub")
+		if username is None:
+			raise HTTPException(status_code=404)
+		result = session.execute(query, {"username": username})
+		user = result.fetchone()
+		if user is None:
+			raise HTTPException(status_code=404)
+		result = session.execute(query_get_image, {"id": id})
+		image = result.fetchone()
+		if image is None:
+			raise HTTPException(status_code=404)
+		image_path: str = image[2]
+		session.execute(query_delete_image, {"user_id": user.id, "id": id})
+		session.commit()
+		os.remove(image_path)
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
 	return {"message": "ok"}

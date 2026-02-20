@@ -4,3 +4,4 @@ node_modules/
 CLAUDE.md
 database.db
 .vite/
+uploads/
