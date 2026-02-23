@@ -8,6 +8,7 @@ from sqlmodel import Session
 from datetime import datetime
 import jwt
 import random
+from geopy.distance import geodesic
 
 from .. import dependencies
 
@@ -46,6 +47,7 @@ async def browse(session: dependencies.session, request: Request):
 			raise HTTPException(status_code=404)
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
+		user_gps: tuple[float, float] = [float(item) for item in user.gps.split(",")]
 		oposite_gender: int = 0 if user.gender == 1 else 1
 		genders: list = [oposite_gender, oposite_gender]
 		if user.sexual_preference == 2:
@@ -59,7 +61,13 @@ async def browse(session: dependencies.session, request: Request):
 		users = result.fetchall()
 		if users is None:
 			raise HTTPException(status_code=404)
-		return random.sample([dict(user._mapping) for user in users], 10)
+		result = [dict(user._mapping) for user in users]
+		for item in result:
+			item_coords: tuple[float, float] = [float(item) for item in item["gps"].split(",")]
+			item["gps"] = round(geodesic(user_gps, item_coords).kilometers, 2)
+		if len(result) < 10:
+			return result
+		return random.sample(result, 10)
 	except HTTPException:
 		raise
 	except Exception as exception:
