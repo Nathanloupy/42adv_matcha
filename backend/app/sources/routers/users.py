@@ -294,7 +294,7 @@ async def me_delete_image(session: dependencies.session, request: Request, id: i
 		session.execute(query_delete_image, {"user_id": user.id, "id": id})
 		result = session.execute(query_get_nb_image, {"id": user.id})
 		nb_images: int = result.fetchone()[0]
-		if nb_images == 0:
+		if nb_images is None or nb_images == 0:
 			session.execute(text(f"UPDATE users SET completed = 0 WHERE username = :username"), {"username": user.username})
 		session.commit()
 		os.remove(image_path)
