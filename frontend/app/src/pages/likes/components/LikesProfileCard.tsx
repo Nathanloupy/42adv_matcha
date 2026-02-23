@@ -1,5 +1,8 @@
+import likeSvg from "@/assets/like.svg";
+
 interface LikesProfileCardProps {
 	profileId: number;
+	isLikedByUser: boolean;
 	firstname: string;
 	age: number;
 	picture: string;
@@ -9,6 +12,7 @@ export type { LikesProfileCardProps };
 
 export default function LikesProfileCard({
 	firstname,
+	isLikedByUser,
 	age,
 	picture,
 }: LikesProfileCardProps) {
@@ -18,6 +22,19 @@ export default function LikesProfileCard({
 			style={{ backgroundImage: `url(${picture})` }}
 		>
 			<div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+			{isLikedByUser && (
+				<button
+					type="button"
+					className="absolute top-2 right-2 z-10 cursor-pointer"
+					onClick={() => {}}
+				>
+					<img
+						src={likeSvg}
+						alt="Like"
+						className="w-8 h-8 drop-shadow-lg"
+					/>
+				</button>
+			)}
 			<div className="relative flex items-end h-full p-2">
 				<span className="text-white font-semibold drop-shadow-lg">
 					{firstname}, {age}

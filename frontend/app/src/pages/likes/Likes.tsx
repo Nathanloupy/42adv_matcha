@@ -6,12 +6,14 @@ import type { LikesProfileCardProps } from "./components/LikesProfileCard";
 const mockLikedProfiles: LikesProfileCardProps[] = [
 	{
 		profileId: 1,
+		isLikedByUser: true,
 		firstname: "Abel",
 		age: 4,
 		picture: "https://i.ytimg.com/vi/HXUHHGOFFMk/maxresdefault.jpg",
 	},
 	{
 		profileId: 3,
+		isLikedByUser: true,
 		firstname: "Allan",
 		age: 5,
 		picture:
@@ -19,6 +21,7 @@ const mockLikedProfiles: LikesProfileCardProps[] = [
 	},
 	{
 		profileId: 5,
+		isLikedByUser: true,
 		firstname: "Yohan",
 		age: 7,
 		picture:
@@ -26,6 +29,7 @@ const mockLikedProfiles: LikesProfileCardProps[] = [
 	},
 	{
 		profileId: 2,
+		isLikedByUser: true,
 		firstname: "Caroline",
 		age: 5,
 		picture:
@@ -33,6 +37,7 @@ const mockLikedProfiles: LikesProfileCardProps[] = [
 	},
 	{
 		profileId: 4,
+		isLikedByUser: true,
 		firstname: "Imane",
 		age: 8,
 		picture:
@@ -40,13 +45,22 @@ const mockLikedProfiles: LikesProfileCardProps[] = [
 	},
 	{
 		profileId: 6,
+		isLikedByUser: true,
 		firstname: "Jade",
 		age: 3,
 		picture: "https://media.tenor.com/Ti6AFXIRrGsAAAAM/meme-funny.gif",
 	},
 ];
 
-const mockLikedYouProfiles: LikesProfileCardProps[] = [];
+const mockLikedYouProfiles: LikesProfileCardProps[] = [
+	{
+		profileId: 6,
+		isLikedByUser: false,
+		firstname: "Jade",
+		age: 3,
+		picture: "https://media.tenor.com/Ti6AFXIRrGsAAAAM/meme-funny.gif",
+	},
+];
 
 export default function Likes() {
 	const [activeTab, setActiveTab] = useState<"liked" | "likedYou">("liked");
