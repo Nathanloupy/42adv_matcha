@@ -87,7 +87,7 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 		if not dependencies.password_hash.verify(login.password, user.password):
 			raise HTTPException(status_code=400)
 		if user.verified == False:
-			raise HTTPException(status_code=403)
+			raise HTTPException(status_code=403, detail="please verify your email")
 		token = generate_token({"sub": user.username})
 		response = JSONResponse(content={"message": "ok"})
 		response.set_cookie(
