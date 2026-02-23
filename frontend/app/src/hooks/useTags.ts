@@ -44,11 +44,9 @@ export function useTags() {
 		setError(null)
 		setIsLoading(true)
 		try {
-			const response = await fetch(`${API_URL}/users/me/tag`, {
+			const response = await fetch(`${API_URL}/users/me/tag?tag=${encodeURIComponent(tag)}`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
 				credentials: "include",
-				body: JSON.stringify({ tag }),
 			})
 			if (!response.ok) {
 				const body = await response.json()
@@ -66,11 +64,9 @@ export function useTags() {
 		setError(null)
 		setIsLoading(true)
 		try {
-			const response = await fetch(`${API_URL}/users/me/tag`, {
+			const response = await fetch(`${API_URL}/users/me/tag?tag=${encodeURIComponent(tag)}`, {
 				method: "DELETE",
-				headers: { "Content-Type": "application/json" },
 				credentials: "include",
-				body: JSON.stringify({ tag }),
 			})
 			if (!response.ok) {
 				const body = await response.json()
