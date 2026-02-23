@@ -5,7 +5,7 @@ import { useResetPassword } from "@/hooks/useAuth";
 export default function ResetPassword() {
 	const [searchParams] = useSearchParams();
 	const token = searchParams.get("token");
-	const { resetPassword, isLoading, error } = useResetPassword();
+	const { resetPassword, isLoading } = useResetPassword();
 
 	if (!token) {
 		return (
@@ -33,7 +33,6 @@ export default function ResetPassword() {
 					onSubmit={resetPassword}
 					token={token}
 					isLoading={isLoading}
-					error={error}
 				/>
 			</div>
 		</div>

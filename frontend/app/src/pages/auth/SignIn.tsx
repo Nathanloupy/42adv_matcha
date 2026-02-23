@@ -2,7 +2,7 @@ import { SignInForm } from "./components/signin-form";
 import { useSignIn } from "@/hooks/useAuth";
 
 export default function SignIn() {
-	const { signIn, isLoading, error } = useSignIn();
+	const { signIn, isLoading } = useSignIn();
 
 	return (
 		<div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
@@ -10,7 +10,6 @@ export default function SignIn() {
 				<SignInForm
 					onSubmit={signIn}
 					isLoading={isLoading}
-					error={error}
 				/>
 			</div>
 		</div>

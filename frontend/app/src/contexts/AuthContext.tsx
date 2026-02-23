@@ -14,14 +14,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	});
 
 	const isAuthenticated = data?.ok ?? false;
+	const isProfileCompleted = data?.completed ?? false;
 
 	function setIsAuthenticated(value: boolean) {
-		queryClient.setQueryData(["auth"], { ok: value });
+		queryClient.setQueryData(["auth"], (prev: typeof data) => ({
+			...prev,
+			ok: value,
+		}));
+	}
+
+	function setIsProfileCompleted(value: boolean) {
+		queryClient.setQueryData(["auth"], (prev: typeof data) => ({
+			...prev,
+			completed: value,
+		}));
 	}
 
 	return (
 		<AuthContext.Provider
-			value={{ isAuthenticated, setIsAuthenticated, isAuthLoading: isLoading }}
+			value={{
+				isAuthenticated,
+				setIsAuthenticated,
+				isAuthLoading: isLoading,
+				isProfileCompleted,
+				setIsProfileCompleted,
+			}}
 		>
 			{children}
 		</AuthContext.Provider>

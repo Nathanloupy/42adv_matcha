@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	fetchAllTags,
 	fetchMyTags,
@@ -25,6 +26,11 @@ export function useTags() {
 			queryClient.setQueryData<string[]>(["tags", "mine"], (prev) =>
 				prev ? [...prev, tag] : [tag],
 			);
+			queryClient.invalidateQueries({ queryKey: ["auth"] });
+			toast.success(`Tag "${tag}" added.`);
+		},
+		onError: (err) => {
+			toast.error(err instanceof Error ? err.message : "Failed to add tag.");
 		},
 	});
 
@@ -34,6 +40,11 @@ export function useTags() {
 			queryClient.setQueryData<string[]>(["tags", "mine"], (prev) =>
 				prev ? prev.filter((t) => t !== tag) : [],
 			);
+			queryClient.invalidateQueries({ queryKey: ["auth"] });
+			toast.success(`Tag "${tag}" removed.`);
+		},
+		onError: (err) => {
+			toast.error(err instanceof Error ? err.message : "Failed to remove tag.");
 		},
 	});
 

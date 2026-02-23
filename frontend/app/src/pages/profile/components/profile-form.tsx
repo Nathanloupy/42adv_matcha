@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { ProfileCard } from "./profile-card";
+import { ImagesCard } from "./images-card";
 import { TagsCard } from "./tags-card";
 import { LocationCard } from "./location-card";
 import type { ProfileData, UpdateProfileData } from "@/hooks/useProfile";
@@ -13,8 +14,6 @@ interface ProfileFormProps extends Omit<
 	onUpdateLocation: (gps: string) => void;
 	isLoading?: boolean;
 	isLocationLoading?: boolean;
-	error?: { message: string } | null;
-	locationError?: { message: string } | null;
 }
 
 export function ProfileForm({
@@ -24,8 +23,6 @@ export function ProfileForm({
 	onUpdateLocation,
 	isLoading,
 	isLocationLoading,
-	error,
-	locationError,
 	...props
 }: ProfileFormProps) {
 	return (
@@ -34,14 +31,13 @@ export function ProfileForm({
 				profile={profile}
 				onSubmit={onSubmit}
 				isLoading={isLoading}
-				error={error?.message ?? ""}
 			/>
+			<ImagesCard />
 			<TagsCard />
 			<LocationCard
 				initialGps={profile.gps ?? ""}
 				onUpdateLocation={onUpdateLocation}
 				isLoading={isLocationLoading}
-				error={locationError?.message ?? ""}
 			/>
 		</div>
 	);

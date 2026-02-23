@@ -15,14 +15,12 @@ interface ProfileCardProps {
 	profile: ProfileData;
 	onSubmit: (data: UpdateProfileData) => void;
 	isLoading?: boolean;
-	error?: string;
 }
 
 export function ProfileCard({
 	profile,
 	onSubmit,
 	isLoading,
-	error,
 }: ProfileCardProps) {
 	const [email, setEmail] = useState(profile.email);
 	const [age, setAge] = useState(profile.age ?? 3);
@@ -177,15 +175,12 @@ export function ProfileCard({
 									<option value={2}>Bisexual</option>
 								</select>
 							</Field>
-						</div>
-						{error && (
-							<p className="text-sm text-destructive">{error}</p>
-						)}
-						<Field>
-							<Button
-								type="submit"
-								disabled={isLoading || !hasChanges}
-							>
+					</div>
+					<Field>
+						<Button
+							type="submit"
+							disabled={isLoading || !hasChanges}
+						>
 								{isLoading ? "Saving..." : "Save changes"}
 							</Button>
 						</Field>

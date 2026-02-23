@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	signIn as signInApi,
 	signUp as signUpApi,
@@ -29,9 +30,12 @@ export function useSignIn() {
 
 	const mutation = useMutation({
 		mutationFn: (data: SignInData) => signInApi(data),
-		onSuccess: () => {
-			queryClient.setQueryData(["auth"], { ok: true });
+		onSuccess: async () => {
+			await queryClient.invalidateQueries({ queryKey: ["auth"] });
 			navigate("/");
+		},
+		onError: (err) => {
+			toast.error(toAuthError(err).message);
 		},
 	});
 
@@ -48,7 +52,11 @@ export function useSignUp() {
 	const mutation = useMutation({
 		mutationFn: (data: SignUpData) => signUpApi(data),
 		onSuccess: () => {
+			toast.success("Account created! Check your email to verify your account.");
 			navigate("/signin");
+		},
+		onError: (err) => {
+			toast.error(toAuthError(err).message);
 		},
 	});
 
@@ -71,6 +79,9 @@ export function useSignOut() {
 			queryClient.removeQueries({ queryKey: ["tags"] });
 			navigate("/");
 		},
+		onError: (err) => {
+			toast.error(toAuthError(err).message);
+		},
 	});
 
 	return {
@@ -84,6 +95,12 @@ export function useRequestResetPassword() {
 	const mutation = useMutation({
 		mutationFn: (data: { email: string }) =>
 			requestResetPasswordApi(data.email),
+		onSuccess: () => {
+			toast.success("Email sent! Check your inbox for the reset link.");
+		},
+		onError: (err) => {
+			toast.error(toAuthError(err).message);
+		},
 	});
 
 	return {
@@ -112,7 +129,11 @@ export function useResetPassword() {
 	const mutation = useMutation({
 		mutationFn: (data: ResetPasswordData) => resetPasswordApi(data),
 		onSuccess: () => {
+			toast.success("Password reset successfully.");
 			navigate("/signin");
+		},
+		onError: (err) => {
+			toast.error(toAuthError(err).message);
 		},
 	});
 

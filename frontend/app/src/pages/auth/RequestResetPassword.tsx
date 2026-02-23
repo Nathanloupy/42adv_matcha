@@ -2,7 +2,7 @@ import { RequestResetPasswordForm } from "./components/request-reset-password-fo
 import { useRequestResetPassword } from "@/hooks/useAuth";
 
 export default function RequestResetPassword() {
-	const { requestResetPassword, isLoading, error } = useRequestResetPassword();
+	const { requestResetPassword, isLoading } = useRequestResetPassword();
 
 	return (
 		<div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
@@ -10,7 +10,6 @@ export default function RequestResetPassword() {
 				<RequestResetPasswordForm
 					onSubmit={requestResetPassword}
 					isLoading={isLoading}
-					error={error}
 				/>
 			</div>
 		</div>

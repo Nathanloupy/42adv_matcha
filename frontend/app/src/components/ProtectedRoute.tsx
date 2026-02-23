@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "@/hooks/useAuthContext";
 
 export default function ProtectedRoute({
@@ -6,7 +6,9 @@ export default function ProtectedRoute({
 }: {
 	children: React.ReactNode;
 }) {
-	const { isAuthenticated, isAuthLoading } = useAuthContext();
+	const { isAuthenticated, isAuthLoading, isProfileCompleted } =
+		useAuthContext();
+	const location = useLocation();
 
 	if (isAuthLoading) {
 		return null;
@@ -14,6 +16,10 @@ export default function ProtectedRoute({
 
 	if (!isAuthenticated) {
 		return <Navigate to="/signin" replace />;
+	}
+
+	if (!isProfileCompleted && location.pathname !== "/profile") {
+		return <Navigate to="/profile" replace />;
 	}
 
 	return children;

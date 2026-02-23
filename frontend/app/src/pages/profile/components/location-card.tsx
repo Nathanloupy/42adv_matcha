@@ -21,14 +21,12 @@ interface LocationCardProps {
 	initialGps: string;
 	onUpdateLocation: (gps: string) => void;
 	isLoading?: boolean;
-	error?: string;
 }
 
 export function LocationCard({
 	initialGps,
 	onUpdateLocation,
 	isLoading,
-	error,
 }: LocationCardProps) {
 	const [gps, setGps] = useState(initialGps);
 	const [gpsDisplay, setGpsDisplay] = useState("");
@@ -157,11 +155,11 @@ export function LocationCard({
 							/>
 						</Field>
 					</div>
-					{(gpsError || error) && (
-						<p className="text-sm text-destructive">
-							{gpsError || error}
-						</p>
-					)}
+				{gpsError && (
+					<p className="text-sm text-destructive">
+						{gpsError}
+					</p>
+				)}
 					<Button
 						type="button"
 						onClick={handleUpdateLocation}

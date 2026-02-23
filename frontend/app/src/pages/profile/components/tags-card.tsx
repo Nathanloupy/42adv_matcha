@@ -16,7 +16,6 @@ export function TagsCard() {
 		myTags,
 		isLoading,
 		isTagsLoading,
-		error,
 		addTag,
 		removeTag,
 	} = useTags();
@@ -74,11 +73,8 @@ export function TagsCard() {
 								</button>
 							);
 						})}
-					</div>
-					{error && (
-						<p className="text-sm text-destructive">{error}</p>
-					)}
 				</div>
+			</div>
 			</CardContent>
 		</Card>
 	);

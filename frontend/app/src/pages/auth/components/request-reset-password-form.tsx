@@ -17,14 +17,12 @@ interface RequestResetPasswordFormProps extends Omit<
 > {
 	onSubmit: (data: { email: string }) => void;
 	isLoading?: boolean;
-	error?: { message: string } | null;
 }
 
 export function RequestResetPasswordForm({
 	className,
 	onSubmit,
 	isLoading,
-	error,
 	...props
 }: RequestResetPasswordFormProps) {
 	const [email, setEmail] = useState("");
@@ -57,17 +55,12 @@ export function RequestResetPasswordForm({
 									onChange={(e) => setEmail(e.target.value)}
 									required
 								/>
-							</Field>
-							{error && (
-								<p className="text-sm text-destructive">
-									{error.message}
-								</p>
-							)}
-							<Field>
-								<Button type="submit" disabled={isLoading}>
-									{isLoading ? "Sending..." : "Send link"}
-								</Button>
-							</Field>
+						</Field>
+						<Field>
+							<Button type="submit" disabled={isLoading}>
+								{isLoading ? "Sending..." : "Send link"}
+							</Button>
+						</Field>
 						</FieldGroup>
 					</form>
 				</CardContent>

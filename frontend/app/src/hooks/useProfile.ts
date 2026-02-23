@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
 	fetchProfile,
 	updateProfile as updateProfileApi,
@@ -23,6 +24,11 @@ export function useProfile() {
 			queryClient.setQueryData<ProfileData>(["profile"], (prev) =>
 				prev ? { ...prev, ...data } : prev,
 			);
+			queryClient.invalidateQueries({ queryKey: ["auth"] });
+			toast.success("Profile saved.");
+		},
+		onError: (err) => {
+			toast.error(err instanceof Error ? err.message : "Failed to save profile.");
 		},
 	});
 
@@ -32,6 +38,11 @@ export function useProfile() {
 			queryClient.setQueryData<ProfileData>(["profile"], (prev) =>
 				prev ? { ...prev, gps } : prev,
 			);
+			queryClient.invalidateQueries({ queryKey: ["auth"] });
+			toast.success("Location updated.");
+		},
+		onError: (err) => {
+			toast.error(err instanceof Error ? err.message : "Failed to update location.");
 		},
 	});
 

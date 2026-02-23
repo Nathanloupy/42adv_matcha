@@ -29,14 +29,12 @@ interface SignUpFormProps extends Omit<
 		firstname: string;
 	}) => void;
 	isLoading?: boolean;
-	error?: { message: string } | null;
 }
 
 export function SignUpForm({
 	className,
 	onSubmit,
 	isLoading,
-	error,
 	...props
 }: SignUpFormProps) {
 	const [username, setUsername] = useState("");
@@ -131,16 +129,11 @@ export function SignUpForm({
 									}
 									required
 								/>
-							</Field>
-							{error && (
-								<p className="text-sm text-destructive">
-									{error.message}
-								</p>
-							)}
-							<Field>
-								<Button type="submit" disabled={isLoading}>
-									{isLoading ? "Signing up..." : "Sign up"}
-								</Button>
+						</Field>
+						<Field>
+							<Button type="submit" disabled={isLoading}>
+								{isLoading ? "Signing up..." : "Sign up"}
+							</Button>
 								<FieldDescription className="text-center">
 									Already have an account?{" "}
 									<Link

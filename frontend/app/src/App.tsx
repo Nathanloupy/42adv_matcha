@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -74,6 +75,7 @@ export default function App() {
 			</main>
 
 			<Footer />
+			<Toaster expand visibleToasts={1} position="top-center" />
 		</div>
 	);
 }

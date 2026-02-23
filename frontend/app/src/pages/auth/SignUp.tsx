@@ -2,7 +2,7 @@ import { SignUpForm } from "./components/signup-form";
 import { useSignUp } from "@/hooks/useAuth";
 
 export default function SignUp() {
-	const { signUp, isLoading, error } = useSignUp();
+	const { signUp, isLoading } = useSignUp();
 
 	return (
 		<div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
@@ -10,7 +10,6 @@ export default function SignUp() {
 				<SignUpForm
 					onSubmit={signUp}
 					isLoading={isLoading}
-					error={error}
 				/>
 			</div>
 		</div>

@@ -18,7 +18,6 @@ interface ResetPasswordFormProps extends Omit<
 	onSubmit: (data: { token: string; new_password: string }) => void;
 	token: string;
 	isLoading?: boolean;
-	error?: { message: string } | null;
 }
 
 export function ResetPasswordForm({
@@ -26,7 +25,6 @@ export function ResetPasswordForm({
 	onSubmit,
 	token,
 	isLoading,
-	error,
 	...props
 }: ResetPasswordFormProps) {
 	const [password, setPassword] = useState("");
@@ -90,11 +88,11 @@ export function ResetPasswordForm({
 									required
 								/>
 							</Field>
-							{(validationError || error) && (
-								<p className="text-sm text-destructive">
-									{validationError ?? error?.message}
-								</p>
-							)}
+						{validationError && (
+							<p className="text-sm text-destructive">
+								{validationError}
+							</p>
+						)}
 							<Field>
 								<Button type="submit" disabled={isLoading}>
 									{isLoading

@@ -42,9 +42,13 @@ async function request<T>(
 
 // ── Auth ──
 
-export function checkAuth(): Promise<{ ok: boolean }> {
+export function checkAuth(): Promise<{ ok: boolean; completed: boolean }> {
 	return fetch(`${API_URL}/users/me`, { credentials: "include" }).then(
-		(r) => ({ ok: r.ok }),
+		async (r) => {
+			if (!r.ok) return { ok: false, completed: false };
+			const data = await r.json();
+			return { ok: true, completed: !!data.completed };
+		},
 	);
 }
 
@@ -153,6 +157,35 @@ export function updateLocation(gps: string): Promise<void> {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ gps }),
+	});
+}
+
+// ── Images ──
+
+export interface ImageData {
+	id: number;
+	base64: string;
+}
+
+export async function fetchImages(): Promise<ImageData[]> {
+	const res = await request<{ message: [number, string][] }>(
+		"/users/me/images",
+	);
+	return res.message.map(([id, base64]) => ({ id, base64 }));
+}
+
+export function uploadImage(file: File): Promise<void> {
+	const formData = new FormData();
+	formData.append("image", file);
+	return request("/users/me/image", {
+		method: "POST",
+		body: formData,
+	});
+}
+
+export function deleteImage(id: number): Promise<void> {
+	return request(`/users/me/image?id=${id}`, {
+		method: "DELETE",
 	});
 }
 

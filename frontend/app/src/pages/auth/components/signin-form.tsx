@@ -23,14 +23,12 @@ interface SignInFormProps extends Omit<
 > {
 	onSubmit: (data: { username: string; password: string }) => void;
 	isLoading?: boolean;
-	error?: { message: string } | null;
 }
 
 export function SignInForm({
 	className,
 	onSubmit,
 	isLoading,
-	error,
 	...props
 }: SignInFormProps) {
 	const [username, setUsername] = useState("");
@@ -89,14 +87,9 @@ export function SignInForm({
 									}
 									required
 								/>
-							</Field>
-							{error && (
-								<p className="text-sm text-destructive">
-									{error.message}
-								</p>
-							)}
-							<Field>
-								<Button type="submit" disabled={isLoading}>
+						</Field>
+						<Field>
+							<Button type="submit" disabled={isLoading}>
 									{isLoading ? "Signing in..." : "Sign in"}
 								</Button>
 								<FieldDescription className="text-center">
