@@ -65,6 +65,7 @@ async def browse(session: dependencies.session, request: Request):
 		for item in result:
 			item_coords: tuple[float, float] = [float(item) for item in item["gps"].split(",")]
 			item["gps"] = round(geodesic(user_gps, item_coords).kilometers, 2)
+		result.sort(key=lambda x: x["gps"])
 		if len(result) < 10:
 			return result
 		return random.sample(result, 10)
