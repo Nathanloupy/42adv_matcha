@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { ProfileCard } from "./profile-card";
 import { TagsCard } from "./tags-card";
@@ -13,7 +12,9 @@ interface ProfileFormProps extends Omit<
 	onSubmit: (data: UpdateProfileData) => void;
 	onUpdateLocation: (gps: string) => void;
 	isLoading?: boolean;
+	isLocationLoading?: boolean;
 	error?: { message: string } | null;
+	locationError?: { message: string } | null;
 }
 
 export function ProfileForm({
@@ -22,40 +23,25 @@ export function ProfileForm({
 	onSubmit,
 	onUpdateLocation,
 	isLoading,
+	isLocationLoading,
 	error,
+	locationError,
 	...props
 }: ProfileFormProps) {
-	const lastActionRef = useRef<"profile" | "location">("profile");
-
-	const profileError =
-		error && lastActionRef.current === "profile" ? error.message : "";
-	const locationError =
-		error && lastActionRef.current === "location" ? error.message : "";
-
-	function handleProfileSubmit(data: UpdateProfileData) {
-		lastActionRef.current = "profile";
-		onSubmit(data);
-	}
-
-	function handleLocationUpdate(gps: string) {
-		lastActionRef.current = "location";
-		onUpdateLocation(gps);
-	}
-
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
 			<ProfileCard
 				profile={profile}
-				onSubmit={handleProfileSubmit}
+				onSubmit={onSubmit}
 				isLoading={isLoading}
-				error={profileError}
+				error={error?.message ?? ""}
 			/>
 			<TagsCard />
 			<LocationCard
 				initialGps={profile.gps ?? ""}
-				onUpdateLocation={handleLocationUpdate}
-				isLoading={isLoading}
-				error={locationError}
+				onUpdateLocation={onUpdateLocation}
+				isLoading={isLocationLoading}
+				error={locationError?.message ?? ""}
 			/>
 		</div>
 	);

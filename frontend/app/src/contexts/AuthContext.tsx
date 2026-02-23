@@ -1,54 +1,29 @@
-import {
-	createContext,
-	useContext,
-	useEffect,
-	useState,
-	type ReactNode,
-} from "react";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
-
-interface AuthContextType {
-	isAuthenticated: boolean;
-	setIsAuthenticated: (value: boolean) => void;
-	isAuthLoading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import type { ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { checkAuth } from "@/services/api";
+import { AuthContext } from "@/contexts/authContext";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
-	const [isAuthLoading, setIsAuthLoading] = useState(true);
+	const queryClient = useQueryClient();
 
-	useEffect(() => {
-		async function checkAuth() {
-			try {
-				const response = await fetch(`${API_URL}/users/me`, {
-					credentials: "include",
-				});
-				setIsAuthenticated(response.ok);
-			} catch {
-				setIsAuthenticated(false);
-			} finally {
-				setIsAuthLoading(false);
-			}
-		}
-		checkAuth();
-	}, []);
+	const { data, isLoading } = useQuery({
+		queryKey: ["auth"],
+		queryFn: checkAuth,
+		staleTime: Infinity,
+		retry: false,
+	});
+
+	const isAuthenticated = data?.ok ?? false;
+
+	function setIsAuthenticated(value: boolean) {
+		queryClient.setQueryData(["auth"], { ok: value });
+	}
 
 	return (
 		<AuthContext.Provider
-			value={{ isAuthenticated, setIsAuthenticated, isAuthLoading }}
+			value={{ isAuthenticated, setIsAuthenticated, isAuthLoading: isLoading }}
 		>
 			{children}
 		</AuthContext.Provider>
 	);
-}
-
-export function useAuthContext() {
-	const context = useContext(AuthContext);
-	if (!context) {
-		throw new Error("useAuthContext must be used within an AuthProvider");
-	}
-	return context;
 }

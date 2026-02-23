@@ -1,18 +1,18 @@
-import { useEffect, useRef } from "react";
 import { ProfileForm } from "./components/profile-form";
 import { useProfile } from "@/hooks/useProfile";
 
 export default function Profile() {
-	const { profile, fetchProfile, updateProfile, updateLocation, isLoading, error } =
-		useProfile();
-	const calledRef = useRef(false);
-
-	useEffect(() => {
-		if (!calledRef.current) {
-			calledRef.current = true;
-			fetchProfile();
-		}
-	}, [fetchProfile]);
+	const {
+		profile,
+		isLoading,
+		error,
+		updateProfile,
+		isUpdating,
+		updateError,
+		updateLocation,
+		isUpdatingLocation,
+		locationError,
+	} = useProfile();
 
 	if (!profile) {
 		if (isLoading) {
@@ -39,8 +39,10 @@ export default function Profile() {
 					profile={profile}
 					onSubmit={updateProfile}
 					onUpdateLocation={updateLocation}
-					isLoading={isLoading}
-					error={error}
+					isLoading={isUpdating}
+					isLocationLoading={isUpdatingLocation}
+					error={updateError}
+					locationError={locationError}
 				/>
 			</div>
 		</div>

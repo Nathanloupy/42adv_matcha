@@ -1,185 +1,124 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAuthContext } from "@/contexts/AuthContext"
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
+import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	signIn as signInApi,
+	signUp as signUpApi,
+	signOut as signOutApi,
+	requestResetPassword as requestResetPasswordApi,
+	verifyEmail as verifyEmailApi,
+	resetPassword as resetPasswordApi,
+	ApiError,
+	type SignInData,
+	type SignUpData,
+	type ResetPasswordData,
+} from "@/services/api";
 
 interface AuthError {
-	message: string
+	message: string;
 }
 
-interface SignInData {
-	username: string
-	password: string
+function toAuthError(err: unknown): AuthError {
+	if (err instanceof ApiError) return { message: err.message };
+	if (err instanceof Error) return { message: err.message };
+	return { message: "An unexpected error occurred" };
 }
 
-interface SignUpData {
-	username: string
-	password: string
-	email: string
-	surname: string
-	firstname: string
+export function useSignIn() {
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+
+	const mutation = useMutation({
+		mutationFn: (data: SignInData) => signInApi(data),
+		onSuccess: () => {
+			queryClient.setQueryData(["auth"], { ok: true });
+			navigate("/");
+		},
+	});
+
+	return {
+		signIn: mutation.mutate,
+		isLoading: mutation.isPending,
+		error: mutation.error ? toAuthError(mutation.error) : null,
+	};
 }
 
-interface RequestResetPasswordData {
-	email: string
+export function useSignUp() {
+	const navigate = useNavigate();
+
+	const mutation = useMutation({
+		mutationFn: (data: SignUpData) => signUpApi(data),
+		onSuccess: () => {
+			navigate("/signin");
+		},
+	});
+
+	return {
+		signUp: mutation.mutate,
+		isLoading: mutation.isPending,
+		error: mutation.error ? toAuthError(mutation.error) : null,
+	};
 }
 
-interface ResetPasswordData {
-	token: string
-	new_password: string
+export function useSignOut() {
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+
+	const mutation = useMutation({
+		mutationFn: signOutApi,
+		onSuccess: () => {
+			queryClient.setQueryData(["auth"], { ok: false });
+			queryClient.removeQueries({ queryKey: ["profile"] });
+			queryClient.removeQueries({ queryKey: ["tags"] });
+			navigate("/");
+		},
+	});
+
+	return {
+		signOut: () => mutation.mutate(),
+		isLoading: mutation.isPending,
+		error: mutation.error ? toAuthError(mutation.error) : null,
+	};
 }
 
-export function useAuth() {
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<AuthError | null>(null)
-	const { setIsAuthenticated } = useAuthContext()
-	const navigate = useNavigate()
+export function useRequestResetPassword() {
+	const mutation = useMutation({
+		mutationFn: (data: { email: string }) =>
+			requestResetPasswordApi(data.email),
+	});
 
-	async function signIn(data: SignInData) {
-		setIsLoading(true)
-		setError(null)
-		try {
+	return {
+		requestResetPassword: mutation.mutate,
+		isLoading: mutation.isPending,
+		error: mutation.error ? toAuthError(mutation.error) : null,
+	};
+}
 
-			const body = new URLSearchParams()
-			body.append("username", data.username)
-			body.append("password", data.password)
+export function useVerifyEmail() {
+	const mutation = useMutation({
+		mutationFn: (token: string) => verifyEmailApi(token),
+	});
 
-			const response = await fetch(`${API_URL}/signin`, {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				credentials: "include",
-				body,
-			})
+	return {
+		verifyEmail: mutation.mutate,
+		isLoading: mutation.isPending,
+		error: mutation.error ? toAuthError(mutation.error) : null,
+		isSuccess: mutation.isSuccess,
+	};
+}
 
-			if (!response.ok) {
-				throw new Error(
-					response.status === 401
-						? "Invalid username or password"
-						: "Sign in failed"
-				)
-			}
+export function useResetPassword() {
+	const navigate = useNavigate();
 
-			setIsAuthenticated(true)
-			navigate("/")
-		} catch (err) {
-			setError({ message: err instanceof Error ? err.message : "Sign in failed" })
-		} finally {
-			setIsLoading(false)
-		}
-	}
+	const mutation = useMutation({
+		mutationFn: (data: ResetPasswordData) => resetPasswordApi(data),
+		onSuccess: () => {
+			navigate("/signin");
+		},
+	});
 
-	async function signUp(data: SignUpData) {
-		setIsLoading(true)
-		setError(null)
-		try {
-			const response = await fetch(`${API_URL}/signup`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(data),
-			})
-
-			if (!response.ok) {
-				throw new Error("Sign up failed")
-			}
-
-			navigate("/signin")
-		} catch (err) {
-			setError({ message: err instanceof Error ? err.message : "Sign up failed" })
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	async function signOut() {
-		try {
-			const response = await fetch(`${API_URL}/signout`, {
-				credentials: "include",
-			});
-
-			if (!response.ok) {
-				throw new Error("Sign out failed")
-			}
-
-			setIsAuthenticated(false)
-			navigate("/")
-		} catch (err) {
-			setError({
-				message: err instanceof Error ? err.message : "Sign out failed",
-			})
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	async function requestResetPassword(data: RequestResetPasswordData) {
-		setIsLoading(true)
-		setError(null)
-		try {
-			const params = new URLSearchParams({ email: data.email })
-			const response = await fetch(`${API_URL}/request-reset-password?${params}`, {
-				method: "POST",
-			})
-
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Password reset request failed")
-			}
-		} catch (err) {
-			setError({
-				message: err instanceof Error ? err.message : "Password reset request failed",
-			})
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	async function verifyEmail(token: string) {
-		setIsLoading(true)
-		setError(null)
-		try {
-			const params = new URLSearchParams({ token })
-			const response = await fetch(`${API_URL}/verify-email?${params}`)
-
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Email verification failed")
-			}
-		} catch (err) {
-			setError({
-				message: err instanceof Error ? err.message : "Email verification failed",
-			})
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	async function resetPassword(data: ResetPasswordData) {
-		setIsLoading(true)
-		setError(null)
-		try {
-			const params = new URLSearchParams({
-				token: data.token,
-				new_password: data.new_password,
-			})
-			const response = await fetch(`${API_URL}/reset-password?${params}`, {
-				method: "POST",
-			})
-
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Password reset failed")
-			}
-
-			navigate("/signin")
-		} catch (err) {
-			setError({
-				message: err instanceof Error ? err.message : "Password reset failed",
-			})
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	return { signIn, signUp, signOut, verifyEmail, requestResetPassword, resetPassword, isLoading, error }
+	return {
+		resetPassword: mutation.mutate,
+		isLoading: mutation.isPending,
+		error: mutation.error ? toAuthError(mutation.error) : null,
+	};
 }

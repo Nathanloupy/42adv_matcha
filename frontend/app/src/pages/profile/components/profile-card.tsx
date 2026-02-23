@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -33,16 +33,6 @@ export function ProfileCard({
 	const [sexualPreference, setSexualPreference] = useState(
 		profile.sexual_preference ?? 0,
 	);
-
-	useEffect(() => {
-		setEmail(profile.email);
-		setAge(profile.age ?? 3);
-		setFirstname(profile.firstname);
-		setSurname(profile.surname);
-		setBiography(profile.biography ?? "");
-		setGender(profile.gender ?? false);
-		setSexualPreference(profile.sexual_preference ?? 0);
-	}, [profile]);
 
 	function handleSubmit(e: FormEvent) {
 		e.preventDefault();

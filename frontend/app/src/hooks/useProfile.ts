@@ -1,121 +1,53 @@
-import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	fetchProfile,
+	updateProfile as updateProfileApi,
+	updateLocation as updateLocationApi,
+	type ProfileData,
+	type UpdateProfileData,
+} from "@/services/api";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
-
-export interface ProfileData {
-	username: string
-	email: string
-	surname: string
-	firstname: string
-	age: number
-	verified: boolean
-	completed: boolean
-	fame: number
-	gps: string
-	biography: string
-	gender: boolean
-	sexual_preference: number
-}
-
-export interface UpdateProfileData {
-	email: string
-	surname: string
-	firstname: string
-	age: number
-	biography: string
-	gender: boolean
-	sexual_preference: number
-	gps?: string
-}
-
-interface ProfileError {
-	message: string
-}
+export type { ProfileData, UpdateProfileData } from "@/services/api";
 
 export function useProfile() {
-	const [profile, setProfile] = useState<ProfileData | null>(null)
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<ProfileError | null>(null)
+	const queryClient = useQueryClient();
 
-	async function fetchProfile() {
-		setIsLoading(true)
-		setError(null)
-		try {
-			const response = await fetch(`${API_URL}/users/me`, {
-				credentials: "include",
-			})
+	const query = useQuery({
+		queryKey: ["profile"],
+		queryFn: fetchProfile,
+	});
 
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Failed to fetch profile")
-			}
-
-			const data: ProfileData = await response.json()
-			setProfile(data)
-		} catch (err) {
-			setError({
-				message: err instanceof Error ? err.message : "Failed to fetch profile",
-			})
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	async function updateProfile(data: UpdateProfileData) {
-		setIsLoading(true)
-		setError(null)
-		try {
-			const response = await fetch(`${API_URL}/users/me`, {
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-				body: JSON.stringify(data),
-			})
-
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Failed to update profile")
-			}
-
-			setProfile((prev) =>
+	const updateMutation = useMutation({
+		mutationFn: (data: UpdateProfileData) => updateProfileApi(data),
+		onSuccess: (_result, data) => {
+			queryClient.setQueryData<ProfileData>(["profile"], (prev) =>
 				prev ? { ...prev, ...data } : prev,
-			)
-		} catch (err) {
-			setError({
-				message: err instanceof Error ? err.message : "Failed to update profile",
-			})
-		} finally {
-			setIsLoading(false)
-		}
-	}
+			);
+		},
+	});
 
-	async function updateLocation(gps: string) {
-		setIsLoading(true)
-		setError(null)
-		try {
-			const response = await fetch(`${API_URL}/users/me`, {
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-				body: JSON.stringify({ gps }),
-			})
-
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Failed to update location")
-			}
-
-			setProfile((prev) =>
+	const locationMutation = useMutation({
+		mutationFn: (gps: string) => updateLocationApi(gps),
+		onSuccess: (_result, gps) => {
+			queryClient.setQueryData<ProfileData>(["profile"], (prev) =>
 				prev ? { ...prev, gps } : prev,
-			)
-		} catch (err) {
-			setError({
-				message: err instanceof Error ? err.message : "Failed to update location",
-			})
-		} finally {
-			setIsLoading(false)
-		}
-	}
+			);
+		},
+	});
 
-	return { profile, fetchProfile, updateProfile, updateLocation, isLoading, error }
+	return {
+		profile: query.data ?? null,
+		isLoading: query.isLoading,
+		error: query.error ? { message: query.error.message } : null,
+		updateProfile: updateMutation.mutate,
+		isUpdating: updateMutation.isPending,
+		updateError: updateMutation.error
+			? { message: updateMutation.error.message }
+			: null,
+		updateLocation: locationMutation.mutate,
+		isUpdatingLocation: locationMutation.isPending,
+		locationError: locationMutation.error
+			? { message: locationMutation.error.message }
+			: null,
+	};
 }

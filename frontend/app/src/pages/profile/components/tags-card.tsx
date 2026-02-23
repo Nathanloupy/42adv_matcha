@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
 	Card,
@@ -16,20 +15,11 @@ export function TagsCard() {
 		allTags,
 		myTags,
 		isLoading,
+		isTagsLoading,
 		error,
-		fetchAllTags,
-		fetchMyTags,
 		addTag,
 		removeTag,
 	} = useTags();
-	const initRef = useRef(false);
-
-	useEffect(() => {
-		if (initRef.current) return;
-		initRef.current = true;
-		fetchAllTags();
-		fetchMyTags();
-	}, [fetchAllTags, fetchMyTags]);
 
 	const myTagsSet = new Set(myTags);
 
@@ -48,12 +38,12 @@ export function TagsCard() {
 			<CardHeader>
 				<CardTitle>Tags</CardTitle>
 				<CardDescription>
-					Select up to {MAX_TAGS} tags that describe your interests ({myTags.length}/{MAX_TAGS})
+					Select up to {MAX_TAGS} tags that describe your interests
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div className="flex flex-col gap-3">
-					{allTags.length === 0 && !error && (
+					{allTags.length === 0 && isTagsLoading && (
 						<p className="text-sm text-muted-foreground">
 							Loading tags...
 						</p>
@@ -75,7 +65,9 @@ export function TagsCard() {
 										selected
 											? "border-primary bg-primary text-primary-foreground"
 											: "border-input bg-transparent text-foreground hover:bg-muted",
-										disabled && !selected && "cursor-not-allowed opacity-50",
+										disabled &&
+											!selected &&
+											"cursor-not-allowed opacity-50",
 									)}
 								>
 									{selected ? `${tag} ✕` : tag}

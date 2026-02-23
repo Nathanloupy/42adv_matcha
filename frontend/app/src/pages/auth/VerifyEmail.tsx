@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import {
 	Card,
@@ -7,17 +7,15 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { useAuth } from "@/hooks/useAuth";
+import { useVerifyEmail } from "@/hooks/useAuth";
 
 export default function VerifyEmail() {
 	const [searchParams] = useSearchParams();
 	const token = searchParams.get("token");
-	const { verifyEmail, isLoading, error } = useAuth();
-	const calledRef = useRef(false);
+	const { verifyEmail, isLoading, error, isSuccess } = useVerifyEmail();
 
 	useEffect(() => {
-		if (token && !calledRef.current) {
-			calledRef.current = true;
+		if (token) {
 			verifyEmail(token);
 		}
 	}, [token, verifyEmail]);
@@ -62,14 +60,14 @@ export default function VerifyEmail() {
 									The link may have expired. Please try
 									signing up again or contact support.
 								</p>
-							) : (
+							) : isSuccess ? (
 								<Link
 									to="/signin"
 									className="text-sm underline-offset-4 hover:underline"
 								>
 									Sign in to your account
 								</Link>
-							)}
+							) : null}
 						</CardContent>
 					)}
 				</Card>

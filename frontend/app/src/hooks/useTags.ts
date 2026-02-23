@@ -1,84 +1,54 @@
-import { useState } from "react"
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+	fetchAllTags,
+	fetchMyTags,
+	addTag as addTagApi,
+	removeTag as removeTagApi,
+} from "@/services/api";
 
 export function useTags() {
-	const [allTags, setAllTags] = useState<string[]>([])
-	const [myTags, setMyTags] = useState<string[]>([])
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
+	const queryClient = useQueryClient();
 
-	async function fetchAllTags() {
-		try {
-			const response = await fetch(`${API_URL}/users/tags`, {
-				credentials: "include",
-			})
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Failed to fetch tags")
-			}
-			const data: string[] = await response.json()
-			setAllTags(data)
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to fetch tags")
-		}
-	}
+	const allTagsQuery = useQuery({
+		queryKey: ["tags", "all"],
+		queryFn: fetchAllTags,
+	});
 
-	async function fetchMyTags() {
-		try {
-			const response = await fetch(`${API_URL}/users/me/tags`, {
-				credentials: "include",
-			})
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Failed to fetch your tags")
-			}
-			const data: string[] = await response.json()
-			setMyTags(data)
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to fetch your tags")
-		}
-	}
+	const myTagsQuery = useQuery({
+		queryKey: ["tags", "mine"],
+		queryFn: fetchMyTags,
+	});
 
-	async function addTag(tag: string) {
-		setError(null)
-		setIsLoading(true)
-		try {
-			const response = await fetch(`${API_URL}/users/me/tag?tag=${encodeURIComponent(tag)}`, {
-				method: "POST",
-				credentials: "include",
-			})
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Failed to add tag")
-			}
-			setMyTags((prev) => [...prev, tag])
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to add tag")
-		} finally {
-			setIsLoading(false)
-		}
-	}
+	const addMutation = useMutation({
+		mutationFn: (tag: string) => addTagApi(tag),
+		onSuccess: (_result, tag) => {
+			queryClient.setQueryData<string[]>(["tags", "mine"], (prev) =>
+				prev ? [...prev, tag] : [tag],
+			);
+		},
+	});
 
-	async function removeTag(tag: string) {
-		setError(null)
-		setIsLoading(true)
-		try {
-			const response = await fetch(`${API_URL}/users/me/tag?tag=${encodeURIComponent(tag)}`, {
-				method: "DELETE",
-				credentials: "include",
-			})
-			if (!response.ok) {
-				const body = await response.json()
-				throw new Error(body.detail ?? "Failed to remove tag")
-			}
-			setMyTags((prev) => prev.filter((t) => t !== tag))
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to remove tag")
-		} finally {
-			setIsLoading(false)
-		}
-	}
+	const removeMutation = useMutation({
+		mutationFn: (tag: string) => removeTagApi(tag),
+		onSuccess: (_result, tag) => {
+			queryClient.setQueryData<string[]>(["tags", "mine"], (prev) =>
+				prev ? prev.filter((t) => t !== tag) : [],
+			);
+		},
+	});
 
-	return { allTags, myTags, isLoading, error, fetchAllTags, fetchMyTags, addTag, removeTag }
+	return {
+		allTags: allTagsQuery.data ?? [],
+		myTags: myTagsQuery.data ?? [],
+		isLoading: addMutation.isPending || removeMutation.isPending,
+		isTagsLoading: allTagsQuery.isLoading || myTagsQuery.isLoading,
+		error:
+			allTagsQuery.error?.message ??
+			myTagsQuery.error?.message ??
+			addMutation.error?.message ??
+			removeMutation.error?.message ??
+			null,
+		addTag: addMutation.mutate,
+		removeTag: removeMutation.mutate,
+	};
 }

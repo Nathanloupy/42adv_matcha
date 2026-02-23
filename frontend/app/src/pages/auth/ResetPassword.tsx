@@ -1,11 +1,11 @@
 import { useSearchParams, Link } from "react-router-dom";
 import { ResetPasswordForm } from "./components/reset-password-form";
-import { useAuth } from "@/hooks/useAuth";
+import { useResetPassword } from "@/hooks/useAuth";
 
 export default function ResetPassword() {
 	const [searchParams] = useSearchParams();
 	const token = searchParams.get("token");
-	const { resetPassword, isLoading, error } = useAuth();
+	const { resetPassword, isLoading, error } = useResetPassword();
 
 	if (!token) {
 		return (

@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useAuthContext } from "@/hooks/useAuthContext";
 import signOutIcon from "@assets/sign-out.svg";
-import { useAuth } from "@/hooks/useAuth";
+import { useSignOut } from "@/hooks/useAuth";
 
 export default function Header() {
 	const { isAuthenticated, isAuthLoading } = useAuthContext();
-	const { signOut } = useAuth();
+	const { signOut } = useSignOut();
 
 	return (
 		<header className="bg-slate-950 text-white px-5 py-3 flex items-center justify-between font-jaini border-b border-border">
