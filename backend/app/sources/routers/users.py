@@ -27,7 +27,7 @@ class UpdateProfile(BaseModel):
 	biography: str | None = Field(default=None)
 	gps: str | None = Field(default=None)
 
-TAGS = ["Adventure Seeker", "Foodie", "Travel Lover", "Dog Person", "Gym Lover", "Homebody", "Music Addict", "Bookworm", "Hopeless Romantic", "Night Owl"]
+TAGS = ["Adventure seeker", "Foodie", "Travel lover", "Dog person", "Gym lover", "Homebody", "Music addict", "Bookworm", "Hopeless romantic", "Night owl"]
 
 @router.get("/users/me", tags=["users"])
 async def me(session: dependencies.session, request: Request):
