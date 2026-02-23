@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { ProfileCard } from "./profile-card";
+import { TagsCard } from "./tags-card";
 import { LocationCard } from "./location-card";
 import type { ProfileData, UpdateProfileData } from "@/hooks/useProfile";
 
@@ -49,6 +50,7 @@ export function ProfileForm({
 				isLoading={isLoading}
 				error={profileError}
 			/>
+			<TagsCard />
 			<LocationCard
 				initialGps={profile.gps ?? ""}
 				onUpdateLocation={handleLocationUpdate}
