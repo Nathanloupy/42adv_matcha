@@ -7,13 +7,14 @@ from sqlalchemy import text, TextClause
 from sqlmodel import Session
 from datetime import datetime
 import jwt
+import random
 
 from .. import dependencies
 
 router: APIRouter = APIRouter()
 
 @router.get("/browse", tags=["borwsing"])
-async def browse(session: dependencies.session, request: Request, offset: int = 0):
+async def browse(session: dependencies.session, request: Request):
 	user_query: TextClause = text("SELECT * FROM users WHERE username = :username")
 	query: TextClause = text("""
 		SELECT username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as tag_count FROM users
@@ -29,7 +30,6 @@ async def browse(session: dependencies.session, request: Request, offset: int = 
 		AND (gender == :gender OR gender == :gender2)
 		GROUP BY users.id
 		ORDER BY tag_count DESC, fame DESC
-		LIMIT 10 OFFSET :offset
 	""")
 
 	token = request.cookies.get("access_token")
@@ -54,13 +54,12 @@ async def browse(session: dependencies.session, request: Request, offset: int = 
 			"current_user_id": user.id,
 			"username": user.username,
 			"gender": genders[0],
-			"gender2": genders[1],
-			"offset": offset
+			"gender2": genders[1]
 		})
 		users = result.fetchall()
 		if users is None:
 			raise HTTPException(status_code=404)
-		return [dict(user._mapping) for user in users]
+		return random.sample([dict(user._mapping) for user in users], 10)
 	except HTTPException:
 		raise
 	except Exception as exception:
