@@ -9,10 +9,14 @@ from datetime import datetime
 import aiofiles
 import base64
 import jwt
+import io
+from PIL import Image
 
 from .. import dependencies
 
 router: APIRouter = APIRouter()
+
+MAX_UPLOAD_SIZE = 10485760
 
 class TokenData(BaseModel):
 	username: str | None = None
@@ -58,6 +62,7 @@ async def me_patch(session: dependencies.session, request: Request, update_profi
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
 	query_completed: TextClause = text("SELECT gender, sexual_preference, biography, gps FROM users WHERE username = :username")
 	query_set_completed: TextClause = text("UPDATE users FROM users WHERE username = :username")
+	query_get_images: TextClause = text("SELECT * FROM users_images WHERE user_id = :user_id")
 
 	token = request.cookies.get("access_token")
 	if token is None:
@@ -92,6 +97,10 @@ async def me_patch(session: dependencies.session, request: Request, update_profi
 			if item is None or item == "":
 				is_completed = False
 				break
+		result = session.execute(query_get_images, {"user_id": user.id})
+		user_image = result.fetchone()
+		if user_image is None:
+			is_completed = False
 		if is_completed is True:
 			new_query = text(f"UPDATE users SET completed = 1 WHERE username = :username")
 		else:
@@ -238,14 +247,19 @@ async def me_add_image(session: dependencies.session, request: Request, image: U
 		result = session.execute(query_count_image, {"user_id": user.id})
 		count: int = 0
 		count += result.fetchone()[0]
+		image_bytes = await image.read()
 		if count >= 5:
 			raise HTTPException(status_code=403, detail="too much images uploaded")
 		elif image.filename.split(".")[-1] != "jpg":
 			raise HTTPException(status_code=400, detail="image format must ne jpg")
+		elif len(image_bytes) > MAX_UPLOAD_SIZE:
+			raise HTTPException(status_code=400, detail="image too big, max is 10 MB")
+		Image.open(io.BytesIO(image_bytes))
 		path = f"users_images/{user.id}-{count}.{image.filename.split(".")[-1]}"
 		async with aiofiles.open(path, "wb") as file:
-			await file.write(await image.read())
+			await file.write(image_bytes)
 		session.execute(query_add_image, {"user_id": user.id, "filename": path})
+		session.execute(text(f"UPDATE users SET completed = 1 WHERE username = :username"), {"username": user.username})
 		session.commit()
 	except HTTPException:
 		raise
@@ -258,6 +272,7 @@ async def me_delete_image(session: dependencies.session, request: Request, id: i
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
 	query_get_image: TextClause = text("SELECT * FROM users_images WHERE id = :id")
 	query_delete_image: TextClause = text("DELETE FROM users_images WHERE id = :id")
+	query_get_nb_image: TextClause = text("SELECT COUNT(*) FROM users_images WHERE id = :id")
 
 	token = request.cookies.get("access_token")
 	if token is None:
@@ -277,6 +292,10 @@ async def me_delete_image(session: dependencies.session, request: Request, id: i
 			raise HTTPException(status_code=404)
 		image_path: str = image[2]
 		session.execute(query_delete_image, {"user_id": user.id, "id": id})
+		result = session.execute(query_get_nb_image, {"id": user.id})
+		nb_images: int = result.fetchone()[0]
+		if nb_images == 0:
+			session.execute(text(f"UPDATE users SET completed = 0 WHERE username = :username"), {"username": user.username})
 		session.commit()
 		os.remove(image_path)
 	except HTTPException:
