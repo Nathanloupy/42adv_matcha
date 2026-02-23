@@ -25,8 +25,11 @@ async def browse(session: dependencies.session, request: Request):
 			)
 		LEFT JOIN users_likes ON users.id = users_likes.other_id
 			AND users_likes.user_id != :current_user_id
+		LEFT JOIN users_blocks ON users.id = users_blocks.other_id
+			AND users_blocks.user_id = :current_user_id
 		WHERE username != :username
 		AND users_likes.id IS NULL
+		AND users_blocks.id IS NULL
 		AND completed == 1
 		AND (gender == :gender OR gender == :gender2)
 		GROUP BY users.id
@@ -69,6 +72,53 @@ async def browse(session: dependencies.session, request: Request):
 		if len(result) < 10:
 			return result
 		return random.sample(result, 10)
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
+
+class SearchRequest(BaseModel):
+	age_range: tuple[int,int]
+	fame_range: tuple[int,int]
+	tags: list[str]
+	location: str
+
+@router.get("/search", tags=["browsing"])
+async def search(session: dependencies.session, request: Request, search_payload: SearchRequest):
+	user_query: TextClause = text("SELECT * FROM users WHERE username = :username")
+	query: TextClause = text("""
+		SELECT username, firstname, surname, age, gender, biography, gps, fame, last_connection as tag_count FROM users
+		LEFT JOIN users_tags ON users.id = users_tags.user_id
+			AND users_tags.tag IN :search_tags
+		LEFT JOIN users_likes ON users.id = users_likes.other_id
+			AND users_likes.user_id != :current_user_id
+		WHERE username != :username
+		AND users_likes.id IS NULL
+		AND completed == 1
+		GROUP BY users.id
+		ORDER BY username
+	""")
+
+	token = request.cookies.get("access_token")
+	if token is None:
+		raise HTTPException(status_code=401)
+	try:
+		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
+		username = payload.get("sub")
+		if username is None:
+			raise HTTPException(status_code=400)
+		result = session.execute(user_query, {"username": username})
+		user = result.fetchone()
+		if user is None:
+			raise HTTPException(status_code=404)
+		if user.completed == 0:
+			raise HTTPException(status_code=400, detail="user profile is not completed")
+		result = session.execute(query, {
+			"search_tags": ["Foodie"],
+			"current_user_id": user.id,
+			"username": user.username
+		})
+		return {"message": "route in building"}
 	except HTTPException:
 		raise
 	except Exception as exception:

@@ -291,7 +291,7 @@ async def me_delete_image(session: dependencies.session, request: Request, id: i
 		if image is None:
 			raise HTTPException(status_code=404)
 		image_path: str = image[2]
-		session.execute(query_delete_image, {"user_id": user.id, "id": id})
+		session.execute(query_delete_image, {"id": id})
 		result = session.execute(query_get_nb_image, {"id": user.id})
 		nb_images: int = result.fetchone()[0]
 		if nb_images is None or nb_images == 0:
