@@ -27,6 +27,8 @@ class UpdateProfile(BaseModel):
 	biography: str | None = Field(default=None)
 	gps: str | None = Field(default=None)
 
+TAGS = ["Adventure Seeker", "Foodie", "Travel Lover", "Dog Person", "Gym Lover", "Homebody", "Music Addict", "Bookworm", "Hopeless Romantic", "Night Owl"]
+
 @router.get("/users/me", tags=["users"])
 async def me(session: dependencies.session, request: Request):
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
@@ -54,6 +56,8 @@ async def me(session: dependencies.session, request: Request):
 @router.patch("/users/me", tags=["users"])
 async def me_patch(session: dependencies.session, request: Request, update_profile: UpdateProfile):
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
+	query_completed: TextClause = text("SELECT gender, sexual_preference, biography, gps FROM users WHERE username = :username")
+	query_set_completed: TextClause = text("UPDATE users FROM users WHERE username = :username")
 
 	token = request.cookies.get("access_token")
 	if token is None:
@@ -79,6 +83,20 @@ async def me_patch(session: dependencies.session, request: Request, update_profi
 					raise HTTPException(status_code=400)
 			new_query: TextClause = text(f"UPDATE users SET {key} = :{key} WHERE username = :username")
 			session.execute(new_query, {key: value, "username": user.username})
+		result = session.execute(query_completed, {"username": username})
+		user_completed = result.fetchone()
+		if user_completed is None:
+			raise HTTPException(status_code=404)
+		is_completed: bool = True
+		for item in user_completed:
+			if item is None or item == "":
+				is_completed = False
+				break
+		if is_completed is True:
+			new_query = text(f"UPDATE users SET completed = 1 WHERE username = :username")
+		else:
+			new_query = text(f"UPDATE users SET completed = 0 WHERE username = :username")
+		session.execute(new_query, {"username": username})
 		session.commit()
 	except HTTPException:
 		raise
@@ -86,6 +104,10 @@ async def me_patch(session: dependencies.session, request: Request, update_profi
 		session.rollback()
 		raise HTTPException(status_code=400, detail=str(exception))
 	return {"message": "ok"}
+
+@router.get("/users/tags", tags=["users"])
+async def me_tags(session: dependencies.session, request: Request):
+	return TAGS
 
 @router.get("/users/me/tags", tags=["users"])
 async def me_tags(session: dependencies.session, request: Request):
@@ -112,7 +134,6 @@ async def me_tags(session: dependencies.session, request: Request):
 	except Exception as exception:
 		raise HTTPException(status_code=400)
 
-
 @router.post("/users/me/tag", tags=["users"])
 async def me_add_tag(session: dependencies.session, request: Request, tag: str):
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
@@ -122,6 +143,9 @@ async def me_add_tag(session: dependencies.session, request: Request, tag: str):
 	if token is None:
 		raise HTTPException(status_code=401)
 	try:
+		tag = tag.capitalize()
+		if tag not in TAGS:
+			raise HTTPException(status_code=404, detail="tag not valid")
 		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
 		username = payload.get("sub")
 		if username is None:

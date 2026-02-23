@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .database import initiliaze_database
 from .routers import auth
 from .routers import users
+from .routers import browsing
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,6 +14,7 @@ async def lifespan(app: FastAPI):
 app: object = FastAPI(lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(browsing.router)
 origins = [
 		"http://localhost:30001", #TODO: change later for prod
 ]
