@@ -62,11 +62,27 @@ const mockLikedYouProfiles: LikesProfileCardProps[] = [
 	},
 ];
 
+const mockViewedYouProfiles: LikesProfileCardProps[] = [
+	{
+		profileId: 6,
+		isLikedByUser: false,
+		firstname: "Jade",
+		age: 3,
+		picture: "https://media.tenor.com/Ti6AFXIRrGsAAAAM/meme-funny.gif",
+	},
+];
+
 export default function Likes() {
-	const [activeTab, setActiveTab] = useState<"liked" | "likedYou">("liked");
+	const [activeTab, setActiveTab] = useState<
+		"liked" | "likedYou" | "viewedYou"
+	>("liked");
 
 	const profiles =
-		activeTab === "liked" ? mockLikedProfiles : mockLikedYouProfiles;
+		activeTab === "liked"
+			? mockLikedProfiles
+			: activeTab === "likedYou"
+				? mockLikedYouProfiles
+				: mockViewedYouProfiles;
 
 	return (
 		<div className="min-h-screen">
@@ -76,10 +92,17 @@ export default function Likes() {
 					name="You liked"
 					onClick={() => setActiveTab("liked")}
 				/>
+				<div className="w-0.5 h-[2em] bg-white/40 shrink-0" />
 				<LikesTab
 					isActive={activeTab === "likedYou"}
 					name="Liked you"
 					onClick={() => setActiveTab("likedYou")}
+				/>
+				<div className="w-0.5 h-[2em] bg-white/40 shrink-0" />
+				<LikesTab
+					isActive={activeTab === "viewedYou"}
+					name="Viewed you"
+					onClick={() => setActiveTab("viewedYou")}
 				/>
 			</div>
 			<div className="grid grid-cols-2">

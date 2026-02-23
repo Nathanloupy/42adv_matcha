@@ -1,4 +1,5 @@
 import likeSvg from "@/assets/like.svg";
+import blockSvg from "@/assets/block.svg";
 
 interface LikesProfileCardProps {
 	profileId: number;
@@ -30,11 +31,22 @@ export default function LikesProfileCard({
 				>
 					<img
 						src={likeSvg}
-						alt="Like"
+						alt="Unlike profile"
 						className="w-8 h-8 drop-shadow-lg"
 					/>
 				</button>
 			)}
+			<button
+				type="button"
+				className="absolute top-2 left-2 z-10 cursor-pointer"
+				onClick={() => {}}
+			>
+				<img
+					src={blockSvg}
+					alt="Block profile"
+					className="w-8 h-8 drop-shadow-lg"
+				/>
+			</button>
 			<div className="relative flex items-end h-full p-2">
 				<span className="text-white font-semibold drop-shadow-lg">
 					{firstname}, {age}
