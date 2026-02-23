@@ -9,10 +9,14 @@ from datetime import datetime
 import aiofiles
 import base64
 import jwt
+import io
+from PIL import Image
 
 from .. import dependencies
 
 router: APIRouter = APIRouter()
+
+MAX_UPLOAD_SIZE = 10485760
 
 class TokenData(BaseModel):
 	username: str | None = None
@@ -238,13 +242,17 @@ async def me_add_image(session: dependencies.session, request: Request, image: U
 		result = session.execute(query_count_image, {"user_id": user.id})
 		count: int = 0
 		count += result.fetchone()[0]
+		image_bytes = await image.read()
 		if count >= 5:
 			raise HTTPException(status_code=403, detail="too much images uploaded")
 		elif image.filename.split(".")[-1] != "jpg":
 			raise HTTPException(status_code=400, detail="image format must ne jpg")
+		elif len(image_bytes) > MAX_UPLOAD_SIZE:
+			raise HTTPException(status_code=400, detail="image too big, max is 10 MB")
+		Image.open(io.BytesIO(image_bytes))
 		path = f"users_images/{user.id}-{count}.{image.filename.split(".")[-1]}"
 		async with aiofiles.open(path, "wb") as file:
-			await file.write(await image.read())
+			await file.write(image_bytes)
 		session.execute(query_add_image, {"user_id": user.id, "filename": path})
 		session.commit()
 	except HTTPException:

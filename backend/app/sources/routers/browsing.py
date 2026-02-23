@@ -13,7 +13,7 @@ from .. import dependencies
 
 router: APIRouter = APIRouter()
 
-@router.get("/browse", tags=["borwsing"])
+@router.get("/browse", tags=["browsing"])
 async def browse(session: dependencies.session, request: Request):
 	user_query: TextClause = text("SELECT * FROM users WHERE username = :username")
 	query: TextClause = text("""
