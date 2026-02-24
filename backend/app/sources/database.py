@@ -13,7 +13,7 @@ CONNECT_ARGS = {"check_same_thread": False}
 ENGINE = create_engine(DATABASE_URL, connect_args=CONNECT_ARGS)
 IMAGES_DIR = "./users_images"
 
-API_URL = f"https://api.thecatapi.com/v1/images/search?limit=10&api_key={os.getenv("CATAPI_TOKEN")}"
+API_URL = f"https://api.thecatapi.com/v1/images/search?limit=10&api_key={os.getenv('CATAPI_TOKEN')}"
 
 FIRST_NAMES = [
 	"Emma",
@@ -251,6 +251,7 @@ AVAILABLE_TAGS = [
 	"Night owl",
 ]
 
+
 def initiliaze_database() -> None:
 	with Session(ENGINE) as session:
 		session.execute(
@@ -376,6 +377,7 @@ def initiliaze_database() -> None:
 		populate(session)
 		session.commit()
 
+
 def fetch_cat_images():
 	try:
 		response = requests.get(API_URL, timeout=30)
@@ -386,17 +388,24 @@ def fetch_cat_images():
 		print(f"Failed to fetch cat images: {e}")
 	return []
 
-def populate(session: Session, population: int = 500):
+
+def populate(session: Session, population: int = 50):
+	number_of_users = session.execute(text("SELECT COUNT(*) FROM USERS")).fetchone()[0] or 0
+	if number_of_users > 10:
+		print("Database already populated, skipping population...")
+		return
+
 	print("Fetching cat images...")
 	cat_urls = fetch_cat_images()
 	print(f"Got {len(cat_urls)} cat images")
 
-	session.execute("SELECT MAX(id) FROM users")
-	max_user_id = session.fetchone()[0] or 0
-	session.execute("SELECT MAX(id) FROM users_images")
-	max_img_id = session.fetchone()[0] or 0
-	session.execute("SELECT MAX(id) FROM users_tags")
-	max_tag_id = session.fetchone()[0] or 0
+	max_user_id = session.execute(text("SELECT MAX(id) FROM users")).fetchone()[0] or 0
+	max_img_id = (
+		session.execute(text("SELECT MAX(id) FROM users_images")).fetchone()[0] or 0
+	)
+	max_tag_id = (
+		session.execute(text("SELECT MAX(id) FROM users_tags")).fetchone()[0] or 0
+	)
 
 	for i in range(1, population + 1):
 		user_id = max_user_id + i
@@ -420,26 +429,26 @@ def populate(session: Session, population: int = 500):
 		)
 
 		session.execute(
-			"""INSERT OR IGNORE INTO users 
+			text("""INSERT OR IGNORE INTO users 
 			(id, username, password, email, firstname, surname, verified, age, gender, sexual_preference, biography, gps, fame, last_connection, completed) 
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-			(
-				user_id,
-				username,
-				password,
-				email,
-				first_name,
-				last_name,
-				verified,
-				age,
-				gender,
-				sexual_pref,
-				bio,
-				gps,
-				fame,
-				last_conn,
-				completed,
-			),
+			VALUES (:id, :username, :password, :email, :firstname, :surname, :verified, :age, :gender, :sexual_pref, :bio, :gps, :fame, :last_conn, :completed)"""),
+			{
+				"id": user_id,
+				"username": username,
+				"password": password,
+				"email": email,
+				"firstname": first_name,
+				"surname": last_name,
+				"verified": verified,
+				"age": age,
+				"gender": gender,
+				"sexual_pref": sexual_pref,
+				"bio": bio,
+				"gps": gps,
+				"fame": fame,
+				"last_conn": last_conn,
+				"completed": completed,
+			},
 		)
 
 		num_images = random.randint(1, 4)
@@ -459,8 +468,10 @@ def populate(session: Session, population: int = 500):
 					print(f"Failed to download image: {e}")
 
 			session.execute(
-				"INSERT OR IGNORE INTO users_images (id, user_id, uuid) VALUES (?, ?, ?)",
-				(img_id, user_id, img_uuid),
+				text(
+					"INSERT OR IGNORE INTO users_images (id, user_id, uuid) VALUES (:id, :user_id, :uuid)"
+				),
+				{"id": img_id, "user_id": user_id, "uuid": img_uuid},
 			)
 
 		num_tags = random.randint(1, 5)
@@ -472,13 +483,16 @@ def populate(session: Session, population: int = 500):
 			used_tags.add(tag)
 			max_tag_id += 1
 			session.execute(
-				"INSERT OR IGNORE INTO users_tags (id, user_id, tag) VALUES (?, ?, ?)",
-				(max_tag_id, user_id, tag),
+				text(
+					"INSERT OR IGNORE INTO users_tags (id, user_id, tag) VALUES (:id, :user_id, :tag)"
+				),
+				{"id": max_tag_id, "user_id": user_id, "tag": tag},
 			)
 
 		print(f"Created user: {username}")
 
 	print(f"Done! Created {population} users with images and tags.")
+
 
 def get_database_session():
 	with Session(ENGINE) as session:
