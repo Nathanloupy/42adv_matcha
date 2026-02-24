@@ -16,6 +16,8 @@ from .. import dependencies
 
 router: APIRouter = APIRouter()
 
+MAX_LOCATION_DISTANCE_KM = 25
+
 
 @router.get("/browse", tags=["browsing"])
 async def browse(session: dependencies.session, user: dependencies.user):
@@ -77,4 +79,54 @@ async def browse(session: dependencies.session, user: dependencies.user):
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
+
+
+@router.get("/search", tags=["browsing"])
+async def search(
+	session: dependencies.session,
+	user: dependencies.user,
+	age_min: int | None = None,
+	age_max: int | None = None,
+	fame_min: int | None = None,
+	fame_max: int | None = None,
+	location: str | None = None,
+	tags: list[str] | None = None,
+):
+	query: str = """
+		SELECT users.*, COALESCE(JSON_AGG(users_tags.tag), '[]') as tags FROM users
+		LEFT JOIN users_tags ON users.id = users_tags.user_id
+		WHERE id != :id
+	"""
+	result: None | object = None
+	params: dict = {}
+
+	try:
+		params["id"] = user.id
+		if age_min and age_max:
+			query += " AND age >= :age_min AND age <= :age_max"
+			params["age_min"] = age_min
+			params["age_max"] = age_max
+		if fame_min and fame_max:
+			query += " AND fame >= :fame_min AND fame <= :fame_max"
+			params["fame_min"] = fame_min
+			params["fame_max"] = fame_max
+		result = session.execute(text(query), params)
+		users = result.fetchall()
+		if users is None:
+			raise HTTPException(status_code=404)
+		users: list = [dict(item._mapping) for item in users]
+		if location:
+			current_location = [float(item) for item in location.split(",")]
+			for index, item in enumerate(users):
+				item_location = [float(item) for item in item["gps"].split(",")]
+				distance = round(
+					geodesic(current_location, item_location).kilometers, 2
+				)
+				if distance > MAX_LOCATION_DISTANCE_KM:
+					users.pop(index)
+		return users
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400)
