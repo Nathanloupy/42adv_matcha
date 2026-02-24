@@ -209,6 +209,29 @@ export function fetchBrowse(): Promise<BrowseProfile[]> {
 	return request("/browse");
 }
 
+// ── Search ──
+
+export interface SearchParams {
+	age_min?: number | null;
+	age_max?: number | null;
+	fame_min?: number | null;
+	fame_max?: number | null;
+	location?: string | null;
+	tags?: string[] | null;
+}
+
+export function fetchSearch(params: SearchParams): Promise<BrowseProfile[]> {
+	const qs = new URLSearchParams();
+	if (params.age_min != null) qs.append("age_min", String(params.age_min));
+	if (params.age_max != null) qs.append("age_max", String(params.age_max));
+	if (params.fame_min != null) qs.append("fame_min", String(params.fame_min));
+	if (params.fame_max != null) qs.append("fame_max", String(params.fame_max));
+	if (params.location) qs.append("location", params.location);
+	if (params.tags?.length) params.tags.forEach((t) => qs.append("tags", t));
+	const query = qs.toString();
+	return request(`/search${query ? `?${query}` : ""}`);
+}
+
 // ── Tags ──
 
 export function fetchAllTags(): Promise<string[]> {

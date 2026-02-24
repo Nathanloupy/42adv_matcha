@@ -1,5 +1,5 @@
 import { useState } from "react";
-import LikesTab from "./components/LikesTab";
+import Tab from "@/components/Tab";
 import LikesProfileCard from "./components/LikesProfileCard";
 import type { LikesProfileCardProps } from "./components/LikesProfileCard";
 
@@ -87,19 +87,19 @@ export default function Likes() {
 	return (
 		<div className="min-h-screen">
 			<div className="flex flex-row items-center text-center">
-				<LikesTab
+				<Tab
 					isActive={activeTab === "liked"}
 					name="You liked"
 					onClick={() => setActiveTab("liked")}
 				/>
 				<div className="w-0.5 h-[2em] bg-white/40 shrink-0" />
-				<LikesTab
+				<Tab
 					isActive={activeTab === "likedYou"}
 					name="Liked you"
 					onClick={() => setActiveTab("likedYou")}
 				/>
 				<div className="w-0.5 h-[2em] bg-white/40 shrink-0" />
-				<LikesTab
+				<Tab
 					isActive={activeTab === "viewedYou"}
 					name="Viewed you"
 					onClick={() => setActiveTab("viewedYou")}
