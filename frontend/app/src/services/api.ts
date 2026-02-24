@@ -202,6 +202,7 @@ export interface BrowseProfile {
 	fame: number;
 	last_connection: string;
 	tag_count: number;
+	images: string[];
 }
 
 export function fetchBrowse(): Promise<BrowseProfile[]> {
