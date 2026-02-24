@@ -6,9 +6,11 @@ DATABASE_URL = f"sqlite:///includes/database.db"
 CONNECT_ARGS = {"check_same_thread": False}
 ENGINE = create_engine(DATABASE_URL, connect_args=CONNECT_ARGS)
 
+
 def initiliaze_database() -> None:
 	with Session(ENGINE) as session:
-		session.execute(text("""
+		session.execute(
+			text("""
 			CREATE TABLE IF NOT EXISTS "users" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"username" TEXT UNIQUE,
@@ -51,8 +53,10 @@ def initiliaze_database() -> None:
 				FOREIGN KEY ("id") REFERENCES "users_images"("user_id")
 				ON UPDATE NO ACTION ON DELETE NO ACTION
 			);
-		"""))
-		session.execute(text("""
+		""")
+		)
+		session.execute(
+			text("""
 			CREATE TABLE IF NOT EXISTS "users_tags" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
@@ -60,40 +64,50 @@ def initiliaze_database() -> None:
 				UNIQUE("user_id", "tag"),
 				PRIMARY KEY("id")
 			);
-		"""))
-		session.execute(text("""
+		""")
+		)
+		session.execute(
+			text("""
 			CREATE TABLE IF NOT EXISTS "users_views" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
-		"""))
-		session.execute(text("""
+		""")
+		)
+		session.execute(
+			text("""
 			CREATE TABLE IF NOT EXISTS "users_likes" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
-		"""))
-		session.execute(text("""
+		""")
+		)
+		session.execute(
+			text("""
 			CREATE TABLE IF NOT EXISTS "users_blocks" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
-		"""))
-		session.execute(text("""
+		""")
+		)
+		session.execute(
+			text("""
 			CREATE TABLE IF NOT EXISTS "users_connected" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
 				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
-		"""))
-		session.execute(text("""
+		""")
+		)
+		session.execute(
+			text("""
 			CREATE TABLE IF NOT EXISTS "users_chats" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
@@ -102,17 +116,21 @@ def initiliaze_database() -> None:
 				"value" TEXT NOT NULL,
 				PRIMARY KEY("id")
 			);
-		"""))
-		session.execute(text("""
+		""")
+		)
+		session.execute(
+			text("""
 			CREATE TABLE IF NOT EXISTS "users_images" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
 				"uuid" STRING NOT NULL,
 				PRIMARY KEY("id")
 			);
-		"""))
+		""")
+		)
 		session.commit()
-		os.makedirs("users_images", exist_ok=True)
+		os.makedirs("user_images", exist_ok=True)
+
 
 def get_database_session():
 	with Session(ENGINE) as session:
