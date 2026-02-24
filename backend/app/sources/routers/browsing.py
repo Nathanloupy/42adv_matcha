@@ -1,6 +1,6 @@
 import os
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, Query
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, Field
 from sqlalchemy import text, TextClause
@@ -82,7 +82,7 @@ async def browse(session: dependencies.session, user: dependencies.user):
 		raise HTTPException(status_code=400)
 
 
-@router.post("/search", tags=["browsing"])
+@router.get("/search", tags=["browsing"])
 async def search(
 	session: dependencies.session,
 	user: dependencies.user,
@@ -91,7 +91,7 @@ async def search(
 	fame_min: int | None = None,
 	fame_max: int | None = None,
 	location: str | None = None,
-	tags: list[str] | None = None,
+	tags: list[str] | None = Query(None),
 ):
 	query: str = "SELECT * FROM users WHERE users.id != :id"
 	query_tags: str = "SELECT tag FROM users_tags WHERE user_id = :user_id"
@@ -126,6 +126,7 @@ async def search(
 			for item in users:
 				result = session.execute(text(query_tags), {"user_id": item["id"]})
 				user_tags = result.fetchall()
+				print(sorted(tags), sorted([tag[0] for tag in user_tags]))
 				if user_tags and sorted(tags) == sorted([tag[0] for tag in user_tags]):
 					filtered_users.append(item)
 			users = filtered_users
