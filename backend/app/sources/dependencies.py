@@ -21,12 +21,12 @@ class User(BaseModel):
 	surname: str
 	verified: bool
 	age: int
-	gender: bool
+	gender: None | bool
 	sexual_preference: int
-	biography: str
-	gps: str
+	biography: None | str
+	gps: None | str
 	fame: int
-	last_connection: object
+	last_connection: None | object
 	completed: bool
 
 jwt_secret: str = os.getenv("BACKEND_JWT_SECRET", "changeme")
@@ -74,4 +74,6 @@ def get_user(session: session, request: Request) -> None | User:
 	except jwt.PyJWTError:
 		raise HTTPException(status_code=401)
 	except Exception as e:
-		raise HTTPException(status_code=400)
+		raise HTTPException(status_code=400, detail=str(e))
+
+user = Annotated[User, Depends(get_user)]
