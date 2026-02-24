@@ -79,7 +79,7 @@ export default function Browse() {
 
 	return (
 		<div className="h-full w-full bg-slate-950 p-2">
-			<BrowseProfileCard key={profile.username} {...profile} onNext={next} />
+			<BrowseProfileCard key={profile.username} {...profile} pictures={profile.images} onNext={next} />
 		</div>
 	);
 }
