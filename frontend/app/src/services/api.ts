@@ -189,6 +189,25 @@ export function deleteImage(id: number): Promise<void> {
 	});
 }
 
+// ── Browse ──
+
+export interface BrowseProfile {
+	username: string;
+	firstname: string;
+	surname: string;
+	age: number;
+	gender: number;
+	biography: string;
+	gps: number;
+	fame: number;
+	last_connection: string;
+	tag_count: number;
+}
+
+export function fetchBrowse(): Promise<BrowseProfile[]> {
+	return request("/browse");
+}
+
 // ── Tags ──
 
 export function fetchAllTags(): Promise<string[]> {

@@ -1,5 +1,6 @@
-import likeSvg from "@/assets/like.svg";
+import unlikeSvg from "@/assets/unlike.svg";
 import blockSvg from "@/assets/block.svg";
+import reportSvg from "@/assets/report.svg";
 
 interface LikesProfileCardProps {
 	profileId: number;
@@ -26,25 +27,36 @@ export default function LikesProfileCard({
 			{isLikedByUser && (
 				<button
 					type="button"
-					className="absolute top-2 right-2 z-10 cursor-pointer"
+					className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
 					onClick={() => {}}
 				>
 					<img
-						src={likeSvg}
+						src={unlikeSvg}
 						alt="Unlike profile"
-						className="w-8 h-8 drop-shadow-lg"
+						className="w-5 h-5 drop-shadow-lg"
 					/>
 				</button>
 			)}
 			<button
 				type="button"
-				className="absolute top-2 left-2 z-10 cursor-pointer"
+				className="absolute top-2 left-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
 				onClick={() => {}}
 			>
 				<img
 					src={blockSvg}
 					alt="Block profile"
-					className="w-8 h-8 drop-shadow-lg"
+					className="w-5 h-5 drop-shadow-lg"
+				/>
+			</button>
+			<button
+				type="button"
+				className="absolute top-12 left-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
+				onClick={() => {}}
+			>
+				<img
+					src={reportSvg}
+					alt="Report fake account"
+					className="w-5 h-5 drop-shadow-lg"
 				/>
 			</button>
 			<div className="relative flex items-end h-full p-2">
