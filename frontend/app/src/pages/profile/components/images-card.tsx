@@ -55,7 +55,7 @@ export function ImagesCard() {
 					<div className="grid grid-cols-3 gap-3">
 						{images.map((image) => (
 							<div
-								key={image.id}
+								key={image.uuid}
 								className="group relative aspect-square overflow-hidden rounded-lg border border-border"
 							>
 								<img
@@ -65,7 +65,7 @@ export function ImagesCard() {
 								/>
 								<button
 									type="button"
-									onClick={() => deleteImage(image.id)}
+									onClick={() => deleteImage(image.uuid)}
 									disabled={isDeleting}
 									className={cn(
 										"absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full",
@@ -98,14 +98,14 @@ export function ImagesCard() {
 							</button>
 						)}
 					</div>
-				<input
-					ref={fileInputRef}
-					type="file"
-					accept={ACCEPTED_TYPES}
-					onChange={handleUpload}
-					className="hidden"
-				/>
-			</div>
+					<input
+						ref={fileInputRef}
+						type="file"
+						accept={ACCEPTED_TYPES}
+						onChange={handleUpload}
+						className="hidden"
+					/>
+				</div>
 			</CardContent>
 		</Card>
 	);

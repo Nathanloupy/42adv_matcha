@@ -30,11 +30,11 @@ export function useImages() {
 	});
 
 	const deleteMutation = useMutation({
-		mutationFn: (id: number) => deleteImageApi(id),
-		onSuccess: (_result, id) => {
+		mutationFn: (uuid: string) => deleteImageApi(uuid),
+		onSuccess: (_result, uuid) => {
 			queryClient.setQueryData<ImageData[]>(
 				["images", "mine"],
-				(prev) => (prev ? prev.filter((img) => img.id !== id) : []),
+				(prev) => (prev ? prev.filter((img) => img.uuid !== uuid) : []),
 			);
 			queryClient.invalidateQueries({ queryKey: ["auth"] });
 			toast.success("Image deleted.");

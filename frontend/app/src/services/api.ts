@@ -163,15 +163,15 @@ export function updateLocation(gps: string): Promise<void> {
 // ── Images ──
 
 export interface ImageData {
-	id: number;
+	uuid: string;
 	base64: string;
 }
 
 export async function fetchImages(): Promise<ImageData[]> {
-	const res = await request<{ message: [number, string][] }>(
+	const res = await request<{ message: [string, string][] }>(
 		"/users/me/images",
 	);
-	return res.message.map(([id, base64]) => ({ id, base64 }));
+	return res.message.map(([uuid, base64]) => ({ uuid, base64 }));
 }
 
 export function uploadImage(file: File): Promise<void> {
@@ -183,8 +183,8 @@ export function uploadImage(file: File): Promise<void> {
 	});
 }
 
-export function deleteImage(id: number): Promise<void> {
-	return request(`/users/me/image?id=${id}`, {
+export function deleteImage(uuid: string): Promise<void> {
+	return request(`/users/me/image?image_uuid=${uuid}`, {
 		method: "DELETE",
 	});
 }
