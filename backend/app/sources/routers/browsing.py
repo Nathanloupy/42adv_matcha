@@ -15,8 +15,7 @@ from .. import dependencies
 router: APIRouter = APIRouter()
 
 @router.get("/browse", tags=["browsing"])
-async def browse(session: dependencies.session, request: Request):
-	user_query: TextClause = text("SELECT * FROM users WHERE username = :username")
+async def browse(session: dependencies.session, user: dependencies.user):
 	query: TextClause = text("""
 		SELECT users.id, username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as tag_count FROM users
 		LEFT JOIN users_tags ON users.id = users_tags.user_id
@@ -36,18 +35,7 @@ async def browse(session: dependencies.session, request: Request):
 		ORDER BY tag_count DESC, fame DESC
 	""")
 
-	token = request.cookies.get("access_token")
-	if token is None:
-		raise HTTPException(status_code=401)
 	try:
-		payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
-		username = payload.get("sub")
-		if username is None:
-			raise HTTPException(status_code=400)
-		result = session.execute(user_query, {"username": username})
-		user = result.fetchone()
-		if user is None:
-			raise HTTPException(status_code=404)
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
 		user_gps: tuple[float, float] = [float(item) for item in user.gps.split(",")]
