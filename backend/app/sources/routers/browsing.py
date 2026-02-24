@@ -82,7 +82,7 @@ async def browse(session: dependencies.session, user: dependencies.user):
 		raise HTTPException(status_code=400)
 
 
-@router.get("/search", tags=["browsing"])
+@router.post("/search", tags=["browsing"])
 async def search(
 	session: dependencies.session,
 	user: dependencies.user,
@@ -93,11 +93,8 @@ async def search(
 	location: str | None = None,
 	tags: list[str] | None = None,
 ):
-	query: str = """
-		SELECT users.*, COALESCE(JSON_AGG(users_tags.tag), '[]') as tags FROM users
-		LEFT JOIN users_tags ON users.id = users_tags.user_id
-		WHERE id != :id
-	"""
+	query: str = "SELECT * FROM users WHERE users.id != :id"
+	query_tags: str = "SELECT tag FROM users_tags WHERE user_id = :user_id"
 	result: None | object = None
 	params: dict = {}
 
@@ -118,15 +115,22 @@ async def search(
 		users: list = [dict(item._mapping) for item in users]
 		if location:
 			current_location = [float(item) for item in location.split(",")]
-			for index, item in enumerate(users):
-				item_location = [float(item) for item in item["gps"].split(",")]
-				distance = round(
-					geodesic(current_location, item_location).kilometers, 2
-				)
-				if distance > MAX_LOCATION_DISTANCE_KM:
-					users.pop(index)
+			users = [
+				item for item in users
+				if (item_location := [float(x) for x in item["gps"].split(",")],
+					round(geodesic(current_location, item_location).kilometers, 2))
+					[1] <= MAX_LOCATION_DISTANCE_KM
+			]
+		if tags:
+			filtered_users = []
+			for item in users:
+				result = session.execute(text(query_tags), {"user_id": item["id"]})
+				user_tags = result.fetchall()
+				if user_tags and sorted(tags) == sorted([tag[0] for tag in user_tags]):
+					filtered_users.append(item)
+			users = filtered_users
 		return users
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400)
+		raise HTTPException(status_code=400, detail=str(exception))
