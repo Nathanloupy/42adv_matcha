@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Home from "./pages/Home";
+import Browse from "./pages/browse/Browse";
 import Messages from "./pages/messages/Messages";
 import Conversation from "./pages/messages/Conversation";
 import Likes from "./pages/likes/Likes";
@@ -26,7 +26,7 @@ export default function App() {
 						path="/"
 						element={
 							<ProtectedRoute>
-								<Home />
+								<Browse />
 							</ProtectedRoute>
 						}
 					/>
