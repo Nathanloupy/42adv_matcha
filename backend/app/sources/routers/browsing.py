@@ -24,7 +24,7 @@ async def browse(session: dependencies.session, request: Request):
 				SELECT tag FROM users_tags WHERE user_id = :current_user_id
 			)
 		LEFT JOIN users_likes ON users.id = users_likes.other_id
-			AND users_likes.user_id != :current_user_id
+			AND users_likes.user_id = :current_user_id
 		LEFT JOIN users_blocks ON users.id = users_blocks.other_id
 			AND users_blocks.user_id = :current_user_id
 		WHERE username != :username
@@ -68,10 +68,9 @@ async def browse(session: dependencies.session, request: Request):
 		for item in result:
 			item_coords: tuple[float, float] = [float(item) for item in item["gps"].split(",")]
 			item["gps"] = round(geodesic(user_gps, item_coords).kilometers, 2)
+		result = random.sample(result, 10) if len(result) >= 10 else result
 		result.sort(key=lambda x: x["gps"])
-		if len(result) < 10:
-			return result
-		return random.sample(result, 10)
+		return result
 	except HTTPException:
 		raise
 	except Exception as exception:
