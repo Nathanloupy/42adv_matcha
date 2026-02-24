@@ -1,13 +1,33 @@
-from fastapi import Depends, Cookie
+from fastapi import Depends, Cookie, Request, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 
 import os
+import jwt
 from typing import Annotated
+from pydantic import BaseModel
+from sqlalchemy import text, TextClause
 from sqlmodel import Session
 from pwdlib import PasswordHash
 
 from . import database
+
+class User(BaseModel):
+	id: int
+	username: str
+	password: str
+	email: str
+	firstname: str
+	surname: str
+	verified: bool
+	age: int
+	gender: bool
+	sexual_preference: int
+	biography: str
+	gps: str
+	fame: int
+	last_connection: object
+	completed: bool
 
 jwt_secret: str = os.getenv("BACKEND_JWT_SECRET", "changeme")
 jwt_algorithm: str = os.getenv("BACKEND_JWT_ALGORITHM", "HS256")
@@ -28,3 +48,30 @@ mail_config: ConnectionConfig = ConnectionConfig(
 )
 fast_mail: FastMail = FastMail(mail_config)
 frontend_url: str = os.getenv("FONTEND_URL", "http://localhost:30001/")
+
+def get_user(session: session, request: Request) -> None | User:
+	token = request.cookies.get("access_token")
+	query: object			= text("SELECT * FROM users WHERE username = :username")
+	payload: dict | None	= None
+	username: str | None	= None
+	result: object | None	= None
+	user: object | None		= None
+
+	try:
+		if token is None:
+			raise HTTPException(status_code=401)
+		payload = jwt.decode(token, jwt_secret, algorithms=[jwt_algorithm])
+		username = payload.get("sub")
+		if username is None:
+			raise HTTPException(status_code=400, detail="a")
+		result = session.execute(query, {"username": username})
+		user = result.fetchone()
+		if user is None:
+			raise HTTPException(status_code=404)
+		return User(**user._mapping)
+	except HTTPException:
+		raise
+	except jwt.PyJWTError:
+		raise HTTPException(status_code=401)
+	except Exception as e:
+		raise HTTPException(status_code=400)

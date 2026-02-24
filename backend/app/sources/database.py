@@ -107,7 +107,7 @@ def initiliaze_database() -> None:
 			CREATE TABLE IF NOT EXISTS "users_images" (
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
-				"filename" INTEGER NOT NULL,
+				"uuid" STRING NOT NULL,
 				PRIMARY KEY("id")
 			);
 		"""))

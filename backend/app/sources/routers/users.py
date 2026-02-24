@@ -11,11 +11,13 @@ import base64
 import jwt
 import io
 from PIL import Image
+import uuid
 
 from .. import dependencies
 
 router: APIRouter = APIRouter()
 
+UPLOAD_PATH = "users_images/"
 MAX_UPLOAD_SIZE = 10485760
 
 class TokenData(BaseModel):
@@ -217,9 +219,9 @@ async def me_get_image(session: dependencies.session, request: Request):
 		images = result.fetchall()
 		images_data: list[tuple[int, str]] = []
 		for image in images:
-			path: str = image[2]
-			with open(path, "rb") as file:
-				images_data.append((int(image[0]), base64.b64encode(file.read()).decode()))
+			image_uuid: str = image[2]
+			with open(UPLOAD_PATH + image_uuid + ".jpg", "rb") as file:
+				images_data.append((image_uuid, base64.b64encode(file.read()).decode()))
 		return {"message": images_data}
 	except HTTPException:
 		raise
@@ -230,7 +232,7 @@ async def me_get_image(session: dependencies.session, request: Request):
 async def me_add_image(session: dependencies.session, request: Request, image: UploadFile):
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
 	query_count_image: TextClause = text("SELECT COUNT(*) FROM users_images WHERE user_id = :user_id")
-	query_add_image: TextClause = text("INSERT INTO users_images (user_id, filename) VALUES (:user_id, :filename)")
+	query_add_image: TextClause = text("INSERT INTO users_images (user_id, uuid) VALUES (:user_id, :uuid)")
 
 	token = request.cookies.get("access_token")
 	if token is None:
@@ -255,10 +257,11 @@ async def me_add_image(session: dependencies.session, request: Request, image: U
 		elif len(image_bytes) > MAX_UPLOAD_SIZE:
 			raise HTTPException(status_code=400, detail="image too big, max is 10 MB")
 		Image.open(io.BytesIO(image_bytes))
-		path = f"users_images/{user.id}-{count}.{image.filename.split(".")[-1]}"
+		image_uuid: str = str(uuid.uuid4())
+		path = f"{UPLOAD_PATH}{image_uuid}.jpg"
 		async with aiofiles.open(path, "wb") as file:
 			await file.write(image_bytes)
-		session.execute(query_add_image, {"user_id": user.id, "filename": path})
+		session.execute(query_add_image, {"user_id": user.id, "uuid": image_uuid})
 		session.execute(text(f"UPDATE users SET completed = 1 WHERE username = :username"), {"username": user.username})
 		session.commit()
 	except HTTPException:
@@ -268,11 +271,11 @@ async def me_add_image(session: dependencies.session, request: Request, image: U
 	return {"message": "ok"}
 
 @router.delete("/users/me/image", tags=["users"])
-async def me_delete_image(session: dependencies.session, request: Request, id: int):
+async def me_delete_image(session: dependencies.session, request: Request, image_uuid: str):
 	query: TextClause = text("SELECT * FROM users WHERE username = :username")
-	query_get_image: TextClause = text("SELECT * FROM users_images WHERE id = :id")
-	query_delete_image: TextClause = text("DELETE FROM users_images WHERE id = :id")
-	query_get_nb_image: TextClause = text("SELECT COUNT(*) FROM users_images WHERE id = :id")
+	query_get_image: TextClause = text("SELECT * FROM users_images WHERE user_id = :user_id AND uuid = :uuid")
+	query_delete_image: TextClause = text("DELETE FROM users_images WHERE user_id = :user_id AND uuid = :uuid")
+	query_get_nb_image: TextClause = text("SELECT COUNT(*) FROM users_images WHERE user_id = :user_id")
 
 	token = request.cookies.get("access_token")
 	if token is None:
@@ -286,18 +289,17 @@ async def me_delete_image(session: dependencies.session, request: Request, id: i
 		user = result.fetchone()
 		if user is None:
 			raise HTTPException(status_code=404)
-		result = session.execute(query_get_image, {"id": id})
+		result = session.execute(query_get_image, {"user_id": user.id, "uuid": image_uuid})
 		image = result.fetchone()
 		if image is None:
 			raise HTTPException(status_code=404)
-		image_path: str = image[2]
-		session.execute(query_delete_image, {"id": id})
-		result = session.execute(query_get_nb_image, {"id": user.id})
-		nb_images: int = result.fetchone()[0]
-		if nb_images is None or nb_images == 0:
+		session.execute(query_delete_image, {"user_id": user.id, "uuid": image_uuid})
+		result = session.execute(query_get_nb_image, {"user_id": user.id})
+		nb_images: int = result.fetchone()
+		if nb_images is None or nb_images[0] == 0:
 			session.execute(text(f"UPDATE users SET completed = 0 WHERE username = :username"), {"username": user.username})
 		session.commit()
-		os.remove(image_path)
+		os.remove(UPLOAD_PATH + image[2] + ".jpg")
 	except HTTPException:
 		raise
 	except Exception as exception:
