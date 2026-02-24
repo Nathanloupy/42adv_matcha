@@ -18,7 +18,7 @@ router: APIRouter = APIRouter()
 async def browse(session: dependencies.session, request: Request):
 	user_query: TextClause = text("SELECT * FROM users WHERE username = :username")
 	query: TextClause = text("""
-		SELECT username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as tag_count FROM users
+		SELECT users.id, username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as tag_count FROM users
 		LEFT JOIN users_tags ON users.id = users_tags.user_id
 			AND users_tags.tag IN (
 				SELECT tag FROM users_tags WHERE user_id = :current_user_id
