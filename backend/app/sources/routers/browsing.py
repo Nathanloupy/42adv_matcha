@@ -16,6 +16,8 @@ from .. import dependencies
 
 router: APIRouter = APIRouter()
 
+MAX_LOCATION_DISTANCE_KM = 25
+
 
 @router.get("/browse", tags=["browsing"])
 async def browse(session: dependencies.session, user: dependencies.user):
@@ -74,6 +76,60 @@ async def browse(session: dependencies.session, user: dependencies.user):
 		result = random.sample(result, 10) if len(result) >= 10 else result
 		result.sort(key=lambda x: x["gps"])
 		return result
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400)
+
+
+@router.post("/search", tags=["browsing"])
+async def search(
+	session: dependencies.session,
+	user: dependencies.user,
+	age_min: int | None = None,
+	age_max: int | None = None,
+	fame_min: int | None = None,
+	fame_max: int | None = None,
+	location: str | None = None,
+	tags: list[str] | None = None,
+):
+	query: str = "SELECT * FROM users WHERE users.id != :id"
+	query_tags: str = "SELECT tag FROM users_tags WHERE user_id = :user_id"
+	result: None | object = None
+	params: dict = {}
+
+	try:
+		params["id"] = user.id
+		if age_min and age_max:
+			query += " AND age >= :age_min AND age <= :age_max"
+			params["age_min"] = age_min
+			params["age_max"] = age_max
+		if fame_min and fame_max:
+			query += " AND fame >= :fame_min AND fame <= :fame_max"
+			params["fame_min"] = fame_min
+			params["fame_max"] = fame_max
+		result = session.execute(text(query), params)
+		users = result.fetchall()
+		if users is None:
+			raise HTTPException(status_code=404)
+		users: list = [dict(item._mapping) for item in users]
+		if location:
+			current_location = [float(item) for item in location.split(",")]
+			users = [
+				item for item in users
+				if (item_location := [float(x) for x in item["gps"].split(",")],
+					round(geodesic(current_location, item_location).kilometers, 2))
+					[1] <= MAX_LOCATION_DISTANCE_KM
+			]
+		if tags:
+			filtered_users = []
+			for item in users:
+				result = session.execute(text(query_tags), {"user_id": item["id"]})
+				user_tags = result.fetchall()
+				if user_tags and sorted(tags) == sorted([tag[0] for tag in user_tags]):
+					filtered_users.append(item)
+			users = filtered_users
+		return users
 	except HTTPException:
 		raise
 	except Exception as exception:
