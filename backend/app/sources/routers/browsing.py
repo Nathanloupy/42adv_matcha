@@ -23,7 +23,7 @@ router: APIRouter = APIRouter()
 )
 async def browse(session: dependencies.session, user: dependencies.user):
 	query: TextClause = text("""
-		SELECT users.id, username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as tag_count FROM users
+		SELECT users.id, username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as common_tags_count FROM users
 		LEFT JOIN users_tags ON users.id = users_tags.user_id
 			AND users_tags.tag IN (
 				SELECT tag FROM users_tags WHERE user_id = :current_user_id
@@ -38,7 +38,7 @@ async def browse(session: dependencies.session, user: dependencies.user):
 		AND completed == 1
 		AND (gender = :gender1 OR gender = :gender2)
 		GROUP BY users.id
-		ORDER BY tag_count DESC, fame DESC
+		ORDER BY common_tags_count DESC, fame DESC
 	""")
 	params: dict = {"current_user_id": user.id, "username": user.username}
 
@@ -141,6 +141,17 @@ async def search(
 				if user_tags and sorted(tags) == sorted([tag[0] for tag in user_tags]):
 					filtered_users.append(item)
 			users = filtered_users
+		result = session.execute(text(query_tags), {"user_id": user.id})
+		me_tags = result.fetchall()
+		for item in users:
+			item["common_tags_count"] = 0
+			result = session.execute(text(query_tags), {"user_id": item["id"]})
+			other_tags = result.fetchall()
+			if me_tags is None or other_tags is None:
+				continue
+			for i in me_tags:
+				if i in other_tags:
+					item["common_tags_count"] += 1
 		all_images = session.exec(text("SELECT user_id, uuid FROM users_images")).all()
 		images_by_users: dict = {}
 		for image in all_images:

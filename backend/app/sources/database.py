@@ -297,6 +297,8 @@ def initiliaze_database() -> None:
 				ON UPDATE NO ACTION ON DELETE NO ACTION,
 				FOREIGN KEY ("id") REFERENCES "users_images"("user_id")
 				ON UPDATE NO ACTION ON DELETE NO ACTION
+				FOREIGN KEY ("id") REFERENCES "users_connected"("user_id")
+				ON UPDATE NO ACTION ON DELETE NO ACTION
 			);
 		""")
 		)
@@ -369,6 +371,16 @@ def initiliaze_database() -> None:
 				"id" INTEGER NOT NULL UNIQUE,
 				"user_id" INTEGER NOT NULL,
 				"uuid" STRING NOT NULL,
+				PRIMARY KEY("id")
+			);
+		""")
+		)
+		session.execute(
+			text("""
+			CREATE TABLE IF NOT EXISTS "users_connected" (
+				"id" INTEGER NOT NULL UNIQUE,
+				"user_id" INTEGER NOT NULL,
+				"other_id" INTEGER NOT NULL,
 				PRIMARY KEY("id")
 			);
 		""")
