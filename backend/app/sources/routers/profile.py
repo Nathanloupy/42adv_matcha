@@ -49,6 +49,7 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 )
 async def like(session: dependencies.session, user: dependencies.user, id: int):
 	query: str = "INSERT INTO users_likes (user_id, other_id) VALUES (:user_id, :id)"
+	query_check_connect: str = "SELECT COUNT(*) FROM users_likes WHERE user_id = :user_id AND other_id = :id"
 	params: dict = {"user_id": user.id, "id": id}
 
 	try:
@@ -56,6 +57,10 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 			raise HTTPException(status_code=400, detail="user profile is not completed")
 		session.execute(text(query), params)
 		session.commit()
+		result = session.execute(text(query_check_connect), params)
+		result_count = result.fetchone()
+		if result_count is None:
+			raise HTTPException(status_code=404)
 		return {"message": "ok"}
 	except HTTPException:
 		raise

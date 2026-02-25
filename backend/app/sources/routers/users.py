@@ -14,12 +14,12 @@ from PIL import Image
 import uuid
 
 from .. import dependencies
+from . import auth
 
 router: APIRouter = APIRouter()
 
 UPLOAD_PATH = "users_images/"
 MAX_UPLOAD_SIZE = 10485760
-
 
 class TokenData(BaseModel):
 	username: str | None = None
@@ -33,7 +33,6 @@ class UpdateProfile(BaseModel):
 	sexual_preference: int | None = Field(default=None)
 	biography: str | None = Field(default=None)
 	gps: str | None = Field(default=None)
-
 
 TAGS = [
 	"Adventure seeker",
@@ -119,6 +118,19 @@ async def me_likes(session: dependencies.session, user: dependencies.user):
 	except Exception as exception:
 		raise HTTPException(status_code=400, detail=str(exception))
 
+@router.post(
+	"/users/report",
+	tags=["users"],
+)
+async def report(session: dependencies.session, user: dependencies.user, id: int):
+	try:
+		if user.completed == 0:
+			raise HTTPException(status_code=400, detail="user profile is not completed")
+		await auth.send_email(os.getenv("SERVER_MAIL_USERNAME", ""), f"{user.username} reported a user", f"{user.username} think this user id '{id}' need to be checked")
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
 
 @router.patch("/users/me", tags=["users"])
 async def me_patch(
@@ -181,11 +193,9 @@ async def me_patch(
 		raise HTTPException(status_code=400)
 	return {"message": "ok"}
 
-
 @router.get("/users/tags", tags=["users"])
 async def me_tags(session: dependencies.session, user: dependencies.user):
 	return TAGS
-
 
 @router.get("/users/me/tags", tags=["users"])
 async def me_tags(session: dependencies.session, user: dependencies.user):
@@ -200,7 +210,6 @@ async def me_tags(session: dependencies.session, user: dependencies.user):
 		raise
 	except Exception:
 		raise HTTPException(status_code=400)
-
 
 @router.post("/users/me/tag", tags=["users"])
 async def me_add_tag(session: dependencies.session, user: dependencies.user, tag: str):
@@ -220,7 +229,6 @@ async def me_add_tag(session: dependencies.session, user: dependencies.user, tag
 		raise HTTPException(status_code=400)
 	return {"message": "ok"}
 
-
 @router.delete("/users/me/tag", tags=["users"])
 async def me_delete_tag(
 	session: dependencies.session, user: dependencies.user, tag: str
@@ -235,7 +243,6 @@ async def me_delete_tag(
 	except Exception:
 		raise HTTPException(status_code=400)
 	return {"message": "ok"}
-
 
 @router.get("/users/me/images", tags=["users"])
 async def me_get_image(session: dependencies.session, user: dependencies.user):
@@ -256,7 +263,6 @@ async def me_get_image(session: dependencies.session, user: dependencies.user):
 		raise
 	except Exception:
 		raise HTTPException(status_code=400)
-
 
 @router.post("/users/me/image", tags=["users"])
 async def me_add_image(
@@ -297,7 +303,6 @@ async def me_add_image(
 	except Exception:
 		raise HTTPException(status_code=400)
 	return {"message": "ok"}
-
 
 @router.delete("/users/me/image", tags=["users"])
 async def me_delete_image(
