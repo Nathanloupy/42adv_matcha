@@ -5,6 +5,7 @@ from .database import initiliaze_database
 from .routers import auth
 from .routers import users
 from .routers import browsing
+from .routers import profile
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,6 +16,7 @@ app: object = FastAPI(lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(browsing.router)
+app.include_router(profile.router)
 origins = ["http://localhost:30001"] #TODO: change for prod
 
 app.add_middleware(

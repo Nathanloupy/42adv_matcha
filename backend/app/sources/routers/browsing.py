@@ -102,6 +102,8 @@ async def search(
 	params: dict = {}
 
 	try:
+		if user.completed == 0:
+			raise HTTPException(status_code=400, detail="user profile is not completed")
 		params["id"] = user.id
 		if age_min and age_max:
 			query += " AND age >= :age_min AND age <= :age_max"
@@ -130,7 +132,7 @@ async def search(
 			current_location = [float(item) for item in location.split(",")]
 			for item in users:
 				item_location = [float(x) for x in item["gps"].split(",")]
-				item["location_km"] = round(geodesic(current_location, item_location).kilometers, 2)
+				item["distance"] = round(geodesic(current_location, item_location).kilometers, 2)
 		if tags:
 			filtered_users = []
 			for item in users:
