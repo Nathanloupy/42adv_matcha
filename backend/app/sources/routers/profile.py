@@ -26,6 +26,8 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 	query_result: None | object = None
 
 	try:
+		if id == user.id:
+			raise HTTPException(status_code=400, detail="user can't view himself")
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
 		query_result = session.execute(text(query), params)
@@ -49,22 +51,27 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 )
 async def like(session: dependencies.session, user: dependencies.user, id: int):
 	query: str = "INSERT INTO users_likes (user_id, other_id) VALUES (:user_id, :id)"
-	query_check_connect: str = "SELECT COUNT(*) FROM users_likes WHERE user_id = :user_id AND other_id = :id"
+	query_check_connect: str = "SELECT * FROM users_likes WHERE user_id = :id AND other_id = :user_id"
 	params: dict = {"user_id": user.id, "id": id}
 
 	try:
+		if id == user.id:
+			raise HTTPException(status_code=400, detail="user can't like himself")
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
 		session.execute(text(query), params)
-		session.commit()
 		result = session.execute(text(query_check_connect), params)
 		result_count = result.fetchone()
 		if result_count is None:
-			raise HTTPException(status_code=404)
+			return {"message": "ok"}
+		session.execute(text("INSERT INTO users_connected (user_id, other_id) VALUES (:user_id, :id)"), params)
+		session.commit()
 		return {"message": "ok"}
 	except HTTPException:
+		session.rollback()
 		raise
 	except Exception as exception:
+		session.rollback()
 		raise HTTPException(status_code=400, detail=str(exception))
 
 @router.delete(
@@ -73,12 +80,19 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 )
 async def unlike(session: dependencies.session, user: dependencies.user, id: int):
 	query: str = "DELETE FROM users_likes WHERE user_id = :user_id AND other_id = :id"
+	query_check_connect: str = "SELECT * FROM users_likes WHERE user_id = :id AND other_id = :user_id"
+	query_unconnect: str = "DELETE FROM users_connected WHERE user_id = :user_id AND other_id = :id"
 	params: dict = {"user_id": user.id, "id": id}
 
 	try:
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
 		session.execute(text(query), params)
+		result = session.execute(text(query_check_connect), params)
+		result_count = result.fetchone()
+		if result_count is None:
+			return {"message": "ok"}
+		session.execute(text(query_unconnect), params)
 		session.commit()
 		return {"message": "ok"}
 	except HTTPException:
