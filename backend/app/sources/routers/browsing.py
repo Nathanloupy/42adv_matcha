@@ -16,9 +16,6 @@ from .. import dependencies
 
 router: APIRouter = APIRouter()
 
-MAX_LOCATION_DISTANCE_KM = 25
-
-
 @router.get("/browse", tags=["browsing"])
 async def browse(session: dependencies.session, user: dependencies.user):
 	query: TextClause = text("""
@@ -35,28 +32,27 @@ async def browse(session: dependencies.session, user: dependencies.user):
 		AND users_likes.id IS NULL
 		AND users_blocks.id IS NULL
 		AND completed == 1
-		AND (gender == :gender OR gender == :gender2)
+		AND (gender = :gender1 OR gender = :gender2)
 		GROUP BY users.id
 		ORDER BY tag_count DESC, fame DESC
 	""")
+	params: dict = {"current_user_id": user.id, "username": user.username}
 
 	try:
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
 		user_gps = [float(item) for item in user.gps.split(",")]
-		oposite_gender: int = 0 if user.gender == 1 else 1
-		genders: list = [oposite_gender, oposite_gender]
-		if user.sexual_preference == 2:
-			genders[1] = user.gender
-		result = session.execute(
-			query,
-			{
-				"current_user_id": user.id,
-				"username": user.username,
-				"gender": genders[0],
-				"gender2": genders[1],
-			},
-		)
+		match user.sexual_preference:
+			case 0:
+				params["gender1"] = 0 if user.gender == 1 else 1
+				params["gender2"] = 0 if user.gender == 1 else 1
+			case 1:
+				params["gender1"] = user.gender
+				params["gender2"] = user.gender
+			case 2:
+				params["gender1"] = user.gender
+				params["gender2"] = 0 if user.gender == 1 else 1
+		result = session.execute(query, params)
 		users = result.fetchall()
 		if users is None:
 			raise HTTPException(status_code=404)
@@ -93,7 +89,10 @@ async def search(
 	location: str | None = None,
 	tags: list[str] | None = Query(None),
 ):
-	query: str = "SELECT * FROM users WHERE users.id != :id"
+	query: str = """
+		SELECT * FROM users WHERE users.id != :id
+		AND (gender = :gender1 OR gender = :gender2)
+	"""
 	query_tags: str = "SELECT tag FROM users_tags WHERE user_id = :user_id"
 	result: None | object = None
 	params: dict = {}
@@ -108,6 +107,16 @@ async def search(
 			query += " AND fame >= :fame_min AND fame <= :fame_max"
 			params["fame_min"] = fame_min
 			params["fame_max"] = fame_max
+		match user.sexual_preference:
+			case 0:
+				params["gender1"] = 0 if user.gender == 1 else 1
+				params["gender2"] = 0 if user.gender == 1 else 1
+			case 1:
+				params["gender1"] = user.gender
+				params["gender2"] = user.gender
+			case 2:
+				params["gender1"] = user.gender
+				params["gender2"] = 0 if user.gender == 1 else 1
 		result = session.execute(text(query), params)
 		users = result.fetchall()
 		if users is None:
@@ -115,21 +124,27 @@ async def search(
 		users: list = [dict(item._mapping) for item in users]
 		if location:
 			current_location = [float(item) for item in location.split(",")]
-			users = [
-				item for item in users
-				if (item_location := [float(x) for x in item["gps"].split(",")],
-					round(geodesic(current_location, item_location).kilometers, 2))
-					[1] <= MAX_LOCATION_DISTANCE_KM
-			]
+			for item in users:
+				item_location = [float(x) for x in item["gps"].split(",")]
+				item["gps"] = round(geodesic(current_location, item_location).kilometers, 2)
 		if tags:
 			filtered_users = []
 			for item in users:
 				result = session.execute(text(query_tags), {"user_id": item["id"]})
 				user_tags = result.fetchall()
-				print(sorted(tags), sorted([tag[0] for tag in user_tags]))
 				if user_tags and sorted(tags) == sorted([tag[0] for tag in user_tags]):
 					filtered_users.append(item)
 			users = filtered_users
+		all_images = session.exec(text("SELECT user_id, uuid FROM users_images")).all()
+		images_by_users: dict = {}
+		for image in all_images:
+			images_by_users.setdefault(image.user_id, []).append(image.uuid)
+		for key, item in images_by_users.items():
+			for index, i_uuid in enumerate(item):
+				with open(users_route.UPLOAD_PATH + i_uuid + ".jpg", "rb") as file:
+					images_by_users[key][index] = base64.b64encode(file.read()).decode()
+		#for item in users:
+		#	item["images"] = images_by_users[item["id"]]
 		return users
 	except HTTPException:
 		raise
