@@ -10,8 +10,16 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuLabel,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -31,14 +39,14 @@ export default function Header() {
 			</Link>
 			<div className="flex items-center gap-3">
 				{isFirstPage && !isAuthLoading && isAuthenticated && (
-					<SearchFilterDropdown />
+					<OptionsDropdown />
 				)}
 				<button
 					type="button"
 					onClick={signOut}
 					className={cn(
 						"cursor-pointer",
-						(!isAuthLoading && isAuthenticated) ? "" : "invisible",
+						!isAuthLoading && isAuthenticated ? "" : "invisible",
 					)}
 				>
 					<img src={signOutIcon} className="h-9" alt="Sign Out" />
@@ -48,12 +56,20 @@ export default function Header() {
 	);
 }
 
-function SearchFilterDropdown() {
+function OptionsDropdown() {
 	const {
+		sortField,
+		sortDirection,
+		setSortField,
+		toggleSortDirection,
 		ageRange,
 		setAgeRange,
 		fameRange,
 		setFameRange,
+		maxDistance,
+		setMaxDistance,
+		minTags,
+		setMinTags,
 		selectedTags,
 		handleTagToggle,
 		locationText,
@@ -70,17 +86,77 @@ function SearchFilterDropdown() {
 
 	const tagsArr = allTags ?? [];
 	const selectedSet = new Set(selectedTags);
-
+	console.log({ minTags });
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger className="cursor-pointer">
 				<img src={optionsIcon} className="h-8 w-8" alt="Options" />
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className="w-64 p-2">
+			<DropdownMenuContent
+				className="w-64 p-2"
+				onCloseAutoFocus={(e) => e.preventDefault()}
+			>
 				<DropdownMenuLabel className="font-bold">
-					Search filters
+					Sort by
 				</DropdownMenuLabel>
 
+				<DropdownMenuItem
+					onSelect={(e) => e.preventDefault()}
+					className="cursor-default flex flex-col items-start gap-2"
+				>
+					<div className="flex items-center gap-2 w-full">
+						<Select
+							value={sortField}
+							onValueChange={(v) =>
+								setSortField(
+									v as
+										| "none"
+										| "age"
+										| "distance"
+										| "fame"
+										| "tags",
+								)
+							}
+						>
+							<SelectTrigger className="flex-1">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="none">None</SelectItem>
+								<SelectItem value="age">Age</SelectItem>
+								<SelectItem value="distance">
+									Distance
+								</SelectItem>
+								<SelectItem value="fame">
+									Fame rating
+								</SelectItem>
+								<SelectItem value="tags">
+									Common tags
+								</SelectItem>
+							</SelectContent>
+						</Select>
+						{sortField !== "none" && (
+							<button
+								type="button"
+								onClick={toggleSortDirection}
+								className="flex items-center justify-center h-9 w-9 shrink-0 rounded-md border border-input text-sm hover:bg-muted transition-colors cursor-pointer"
+								title={
+									sortDirection === "asc"
+										? "Ascending"
+										: "Descending"
+								}
+							>
+								{sortDirection === "asc" ? "↑" : "↓"}
+							</button>
+						)}
+					</div>
+				</DropdownMenuItem>
+
+				<DropdownMenuSeparator />
+
+				<DropdownMenuLabel className="font-bold">
+					Query filters
+				</DropdownMenuLabel>
 				<DropdownMenuItem
 					onSelect={(e) => e.preventDefault()}
 					className="cursor-default flex flex-col items-start gap-2"
@@ -116,8 +192,29 @@ function SearchFilterDropdown() {
 						id="search-fame-range"
 						value={fameRange}
 						onValueChange={setFameRange}
-						min={-100}
-						max={100}
+						min={-1000}
+						max={1000}
+						step={1}
+						className="w-full"
+					/>
+				</DropdownMenuItem>
+
+				<DropdownMenuItem
+					onSelect={(e) => e.preventDefault()}
+					className="cursor-default flex flex-col items-start gap-2"
+				>
+					<div className="flex items-center justify-between gap-2 w-full">
+						<Label htmlFor="search-max-distance">Distance</Label>
+						<span className="text-muted-foreground text-sm">
+							{`<${maxDistance}km`}
+						</span>
+					</div>
+					<Slider
+						id="search-max-distance"
+						value={[maxDistance]}
+						onValueChange={(v) => setMaxDistance(v[0])}
+						min={1}
+						max={500}
 						step={1}
 						className="w-full"
 					/>
@@ -148,6 +245,28 @@ function SearchFilterDropdown() {
 					)}
 				</DropdownMenuItem>
 
+				<DropdownMenuItem
+					onSelect={(e) => e.preventDefault()}
+					className="cursor-default flex flex-col items-start gap-2"
+				>
+					<div className="flex items-center justify-between gap-2 w-full">
+						<Label htmlFor="search-min-tags">Common tags</Label>
+						<span className="text-muted-foreground text-sm">
+							{`>${minTags}`}
+						</span>
+					</div>
+
+					<Slider
+						id="search-min-tags"
+						dir="rtl"
+						value={[10 - minTags]}
+						onValueChange={(v) => setMinTags(10 - v[0])}
+						min={0}
+						max={10}
+						step={1}
+						className="w-full"
+					/>
+				</DropdownMenuItem>
 				{tagsArr.length > 0 && (
 					<DropdownMenuItem
 						onSelect={(e) => e.preventDefault()}

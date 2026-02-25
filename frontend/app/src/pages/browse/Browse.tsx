@@ -1,12 +1,10 @@
-import { useState } from "react";
 import { useOptionsContext } from "@/hooks/useOptionsContext";
 import Tab from "@/components/Tab";
 import { BrowseContent } from "./components/browse-content";
 import { SearchContent } from "./components/search-content";
 
 export default function Browse() {
-	const [activeTab, setActiveTab] = useState<"browse" | "search">("browse");
-	const { searchParams } = useOptionsContext();
+	const { activeTab, setActiveTab, searchParams } = useOptionsContext();
 
 	return (
 		<div className="h-full w-full bg-slate-950 flex flex-col">

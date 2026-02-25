@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { geocodeAddress } from "@/services/geolocation";
 import type { SearchParams } from "@/services/api";
 import { OptionsContext } from "@/contexts/options-context";
+import type { BrowseTab, SortField, SortDirection } from "@/contexts/options-context";
 
 function useDebounce<T>(value: T, delay: number): T {
 	const [debounced, setDebounced] = useState(value);
@@ -14,13 +15,18 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export function OptionsProvider({ children }: { children: ReactNode }) {
+	const [activeTab, setActiveTab] = useState<BrowseTab>("browse");
+	const [sortField, setSortField] = useState<SortField>("none");
+	const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 	const [ageRange, setAgeRange] = useState([3, 21]);
-	const [fameRange, setFameRange] = useState([-100, 100]);
+	const [fameRange, setFameRange] = useState([-1000, 1000]);
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
 	const [locationText, setLocationText] = useState("");
 	const [locationCoords, setLocationCoords] = useState<string | null>(null);
 	const [locationError, setLocationError] = useState("");
 	const [isGeocoding, setIsGeocoding] = useState(false);
+	const [maxDistance, setMaxDistance] = useState(100);
+	const [minTags, setMinTags] = useState(0);
 	const geocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const debouncedAge = useDebounce(ageRange, 300);
@@ -39,6 +45,10 @@ export function OptionsProvider({ children }: { children: ReactNode }) {
 		setSelectedTags((prev) =>
 			prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
 		);
+	}
+
+	function toggleSortDirection() {
+		setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
 	}
 
 	function handleLocationChange(value: string) {
@@ -81,29 +91,35 @@ export function OptionsProvider({ children }: { children: ReactNode }) {
 			}
 			const value = locationText.trim();
 			if (!value) return;
-		setIsGeocoding(true);
-		geocodeAddress(value)
-			.then((result) => {
-				if (result) {
-					setLocationCoords(`${result.lat},${result.lng}`);
-					setLocationError("");
-				} else {
+			setIsGeocoding(true);
+			geocodeAddress(value)
+				.then((result) => {
+					if (result) {
+						setLocationCoords(`${result.lat},${result.lng}`);
+						setLocationError("");
+					} else {
+						setLocationCoords(null);
+						setLocationError("Location not found");
+					}
+					setIsGeocoding(false);
+				})
+				.catch(() => {
 					setLocationCoords(null);
-					setLocationError("Location not found");
-				}
-				setIsGeocoding(false);
-			})
-			.catch(() => {
-				setLocationCoords(null);
-				setLocationError("Failed to geocode address");
-				setIsGeocoding(false);
-			});
+					setLocationError("Failed to geocode address");
+					setIsGeocoding(false);
+				});
 		}
 	}
 
 	return (
 		<OptionsContext.Provider
 			value={{
+				activeTab,
+				setActiveTab,
+				sortField,
+				sortDirection,
+				setSortField,
+				toggleSortDirection,
 				searchParams,
 				ageRange,
 				setAgeRange,
@@ -116,6 +132,10 @@ export function OptionsProvider({ children }: { children: ReactNode }) {
 				handleLocationKeyDown,
 				locationError,
 				isGeocoding,
+				maxDistance,
+				setMaxDistance,
+				minTags,
+				setMinTags,
 			}}
 		>
 			{children}
