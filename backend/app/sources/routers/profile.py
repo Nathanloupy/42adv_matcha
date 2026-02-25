@@ -56,12 +56,13 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 			raise HTTPException(status_code=400, detail="user profile is not completed")
 		session.execute(text(query), params)
 		session.commit()
+		return {"message": "ok"}
 	except HTTPException:
 		raise
 	except Exception as exception:
 		raise HTTPException(status_code=400, detail=str(exception))
 
-@router.post(
+@router.delete(
 	"/unlike",
 	tags=["view"]
 )
@@ -74,6 +75,7 @@ async def unlike(session: dependencies.session, user: dependencies.user, id: int
 			raise HTTPException(status_code=400, detail="user profile is not completed")
 		session.execute(text(query), params)
 		session.commit()
+		return {"message": "ok"}
 	except HTTPException:
 		raise
 	except Exception as exception:
