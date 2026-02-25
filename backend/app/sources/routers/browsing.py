@@ -16,7 +16,11 @@ from .. import dependencies
 
 router: APIRouter = APIRouter()
 
-@router.get("/browse", tags=["browsing"])
+@router.get(
+	"/browse",
+    response_model_exclude={"password", "email"},
+	tags=["browsing"]
+)
 async def browse(session: dependencies.session, user: dependencies.user):
 	query: TextClause = text("""
 		SELECT users.id, username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as tag_count FROM users
@@ -126,7 +130,7 @@ async def search(
 			current_location = [float(item) for item in location.split(",")]
 			for item in users:
 				item_location = [float(x) for x in item["gps"].split(",")]
-				item["gps"] = round(geodesic(current_location, item_location).kilometers, 2)
+				item["location_km"] = round(geodesic(current_location, item_location).kilometers, 2)
 		if tags:
 			filtered_users = []
 			for item in users:
@@ -143,8 +147,10 @@ async def search(
 			for index, i_uuid in enumerate(item):
 				with open(users_route.UPLOAD_PATH + i_uuid + ".jpg", "rb") as file:
 					images_by_users[key][index] = base64.b64encode(file.read()).decode()
-		#for item in users:
-		#	item["images"] = images_by_users[item["id"]]
+		for item in users:
+			item["images"] = images_by_users[item["id"]]
+			item.pop("password")
+			item.pop("email")
 		return users
 	except HTTPException:
 		raise
