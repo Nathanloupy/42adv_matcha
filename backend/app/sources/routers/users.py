@@ -118,6 +118,37 @@ async def me_likes(session: dependencies.session, user: dependencies.user):
 	except Exception as exception:
 		raise HTTPException(status_code=400, detail=str(exception))
 
+@router.get(
+	"/users/me_connect",
+	tags=["users"],
+)
+async def me_connected(session: dependencies.session, user: dependencies.user):
+	query: str = """
+		SELECT users.id, users.username, users_images.uuid FROM users
+		LEFT JOIN users_connected ON users.id = users_connected.other_id
+		LEFT JOIN users_images ON users.id = users_images.user_id
+		WHERE users_connected.user_id = :user_id
+	"""
+	params: dict = {"user_id": user.id}
+	query_result: None | object = None
+
+	try:
+		if user.completed == 0:
+			raise HTTPException(status_code=400, detail="user profile is not completed")
+		query_result = session.execute(text(query), params)
+		result = query_result.fetchall()
+		if result is None:
+			raise HTTPException(status_code=404)
+		result = [dict(x._mapping) for x in result]
+		for index, item in enumerate(result):
+			with open(UPLOAD_PATH + item["uuid"] + ".jpg", "rb") as file:
+				result[index]["image"] = base64.b64encode(file.read()).decode()
+		return result
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
+
 @router.post(
 	"/users/report",
 	tags=["users"],
