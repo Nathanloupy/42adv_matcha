@@ -29,7 +29,7 @@ export function ProfileCard({
 	const [biography, setBiography] = useState(profile.biography ?? "");
 	const [gender, setGender] = useState(profile.gender ?? false);
 	const [sexualPreference, setSexualPreference] = useState(
-		profile.sexual_preference ?? 0,
+		profile.sexualPreference ?? 0,
 	);
 
 	function handleSubmit(e: FormEvent) {
@@ -41,7 +41,7 @@ export function ProfileCard({
 			surname,
 			biography,
 			gender,
-			sexual_preference: sexualPreference,
+			sexualPreference,
 		});
 	}
 
@@ -52,7 +52,7 @@ export function ProfileCard({
 		surname !== profile.surname ||
 		biography !== (profile.biography ?? "") ||
 		gender !== (profile.gender ?? false) ||
-		sexualPreference !== (profile.sexual_preference ?? 0);
+		sexualPreference !== (profile.sexualPreference ?? 0);
 
 	return (
 		<Card>

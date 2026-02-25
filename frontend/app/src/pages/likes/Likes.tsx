@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Tab from "@/components/Tab";
-import LikesProfileCard from "./components/LikesProfileCard";
-import type { LikesProfileCardProps } from "./components/LikesProfileCard";
+import { LikesProfileCard } from "./components/likes-profile-card";
+import type { LikesProfileCardProps } from "./components/likes-profile-card";
 
 const mockLikedProfiles: LikesProfileCardProps[] = [
 	{

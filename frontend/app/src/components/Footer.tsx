@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import catIcon from "@assets/cat.svg";
-import loveLetterIcon from "@assets/love-letter-opened.svg";
-import heartIcon from "@assets/heart.svg";
-import editIcon from "@assets/edit.svg";
+import { cn } from "@/lib/utils";
+import catIcon from "@/assets/cat.svg";
+import loveLetterIcon from "@/assets/love-letter-opened.svg";
+import heartIcon from "@/assets/heart.svg";
+import editIcon from "@/assets/edit.svg";
 
 export default function Footer() {
 	const { isAuthenticated, isAuthLoading } = useAuthContext();
@@ -11,7 +12,10 @@ export default function Footer() {
 	return (
 		<footer className="bg-slate-950 py-3 text-sm border-t border-border">
 			<div
-				className={`grid grid-cols-4 items-center ${!isAuthLoading && isAuthenticated ? "" : "invisible"}`}
+				className={cn(
+					"grid grid-cols-4 items-center",
+					(!isAuthLoading && isAuthenticated) ? "" : "invisible",
+				)}
 			>
 				<Link to="/" className="flex justify-center">
 					<img src={catIcon} className="h-9" alt="Search" />

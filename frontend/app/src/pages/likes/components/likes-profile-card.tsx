@@ -12,7 +12,7 @@ interface LikesProfileCardProps {
 
 export type { LikesProfileCardProps };
 
-export default function LikesProfileCard({
+export function LikesProfileCard({
 	firstname,
 	isLikedByUser,
 	age,

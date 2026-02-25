@@ -1,30 +1,32 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchSearch } from "@/services/api";
 import type { SearchParams } from "@/services/api";
-import BrowseProfileCard from "./BrowseProfileCard";
+import { BrowseProfileCard } from "./browse-profile-card";
 
 interface SearchContentProps {
 	searchParams: SearchParams;
 }
 
-export default function SearchContent({ searchParams }: SearchContentProps) {
-	const [index, setIndex] = useState(0);
+export function SearchContent({ searchParams }: SearchContentProps) {
+	const [indexState, setIndexState] = useState({
+		params: searchParams,
+		index: 0,
+	});
 	const queryClient = useQueryClient();
+
+	const index =
+		indexState.params === searchParams ? indexState.index : 0;
 
 	const { data, isLoading, isError, error, isFetching } = useQuery({
 		queryKey: ["search", searchParams],
 		queryFn: () => fetchSearch(searchParams),
 	});
 
-	useEffect(() => {
-		setIndex(0);
-	}, [searchParams]);
-
-	const advanceToNext = useCallback(async () => {
-		setIndex(0);
+	async function advanceToNext() {
+		setIndexState({ params: searchParams, index: 0 });
 		await queryClient.invalidateQueries({ queryKey: ["search"] });
-	}, [queryClient]);
+	}
 
 	function next() {
 		if (!data) return;
@@ -32,7 +34,10 @@ export default function SearchContent({ searchParams }: SearchContentProps) {
 		if (isLast) {
 			advanceToNext();
 		} else {
-			setIndex((i) => Math.min(i + 1, (data?.length ?? 1) - 1));
+			setIndexState((prev) => ({
+				params: searchParams,
+				index: Math.min(prev.index + 1, (data?.length ?? 1) - 1),
+			}));
 		}
 	}
 

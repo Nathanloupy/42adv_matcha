@@ -101,13 +101,13 @@ export function verifyEmail(token: string): Promise<void> {
 
 export interface ResetPasswordData {
 	token: string;
-	new_password: string;
+	newPassword: string;
 }
 
 export function resetPassword(data: ResetPasswordData): Promise<void> {
 	const params = new URLSearchParams({
 		token: data.token,
-		new_password: data.new_password,
+		new_password: data.newPassword,
 	});
 	return request(`/reset-password?${params}`, { method: "POST" });
 }
@@ -126,7 +126,7 @@ export interface ProfileData {
 	gps: string;
 	biography: string;
 	gender: boolean;
-	sexual_preference: number;
+	sexualPreference: number;
 }
 
 export interface UpdateProfileData {
@@ -136,19 +136,24 @@ export interface UpdateProfileData {
 	age: number;
 	biography: string;
 	gender: boolean;
-	sexual_preference: number;
+	sexualPreference: number;
 	gps?: string;
 }
 
-export function fetchProfile(): Promise<ProfileData> {
-	return request("/users/me");
+export async function fetchProfile(): Promise<ProfileData> {
+	const raw = await request<Record<string, unknown>>("/users/me");
+	return {
+		...raw,
+		sexualPreference: raw.sexual_preference,
+	} as unknown as ProfileData;
 }
 
 export function updateProfile(data: UpdateProfileData): Promise<void> {
+	const { sexualPreference, ...rest } = data;
 	return request("/users/me", {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(data),
+		body: JSON.stringify({ ...rest, sexual_preference: sexualPreference }),
 	});
 }
 
@@ -200,36 +205,46 @@ export interface BrowseProfile {
 	biography: string;
 	gps: number;
 	fame: number;
-	last_connection: string;
-	tag_count: number;
+	lastConnection: string;
+	tagCount: number;
 	images: string[];
 }
 
-export function fetchBrowse(): Promise<BrowseProfile[]> {
-	return request("/browse");
+function toBrowseProfile(raw: Record<string, unknown>): BrowseProfile {
+	return {
+		...raw,
+		lastConnection: raw.last_connection,
+		tagCount: raw.tag_count,
+	} as unknown as BrowseProfile;
+}
+
+export async function fetchBrowse(): Promise<BrowseProfile[]> {
+	const raw = await request<Record<string, unknown>[]>("/browse");
+	return raw.map(toBrowseProfile);
 }
 
 // ── Search ──
 
 export interface SearchParams {
-	age_min?: number | null;
-	age_max?: number | null;
-	fame_min?: number | null;
-	fame_max?: number | null;
+	ageMin?: number | null;
+	ageMax?: number | null;
+	fameMin?: number | null;
+	fameMax?: number | null;
 	location?: string | null;
 	tags?: string[] | null;
 }
 
-export function fetchSearch(params: SearchParams): Promise<BrowseProfile[]> {
+export async function fetchSearch(params: SearchParams): Promise<BrowseProfile[]> {
 	const qs = new URLSearchParams();
-	if (params.age_min != null) qs.append("age_min", String(params.age_min));
-	if (params.age_max != null) qs.append("age_max", String(params.age_max));
-	if (params.fame_min != null) qs.append("fame_min", String(params.fame_min));
-	if (params.fame_max != null) qs.append("fame_max", String(params.fame_max));
+	if (params.ageMin != null) qs.append("age_min", String(params.ageMin));
+	if (params.ageMax != null) qs.append("age_max", String(params.ageMax));
+	if (params.fameMin != null) qs.append("fame_min", String(params.fameMin));
+	if (params.fameMax != null) qs.append("fame_max", String(params.fameMax));
 	if (params.location) qs.append("location", params.location);
 	if (params.tags?.length) params.tags.forEach((t) => qs.append("tags", t));
 	const query = qs.toString();
-	return request(`/search${query ? `?${query}` : ""}`);
+	const raw = await request<Record<string, unknown>[]>(`/search${query ? `?${query}` : ""}`);
+	return raw.map(toBrowseProfile);
 }
 
 // ── Tags ──

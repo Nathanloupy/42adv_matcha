@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchBrowse } from "@/services/api";
-import BrowseProfileCard from "./BrowseProfileCard";
+import { BrowseProfileCard } from "./browse-profile-card";
 
-export default function BrowseContent() {
+export function BrowseContent() {
 	const [index, setIndex] = useState(0);
 	const queryClient = useQueryClient();
 

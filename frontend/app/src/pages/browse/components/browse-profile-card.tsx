@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import likeSvg from "@/assets/like.svg";
 import blockSvg from "@/assets/block.svg";
 import reportSvg from "@/assets/report.svg";
@@ -16,8 +17,8 @@ interface BrowseProfileCardProps {
 	biography: string;
 	gps: number;
 	fame: number;
-	last_connection: string;
-	tag_count: number;
+	lastConnection: string;
+	tagCount: number;
 	pictures?: string[];
 	onNext: () => void;
 }
@@ -34,15 +35,15 @@ function formatLastConnection(raw: string): string {
 	});
 }
 
-export default function BrowseProfileCard({
+export function BrowseProfileCard({
 	firstname,
 	age,
 	gender,
 	biography,
 	gps,
 	fame,
-	last_connection,
-	tag_count,
+	lastConnection,
+	tagCount,
 	pictures = [],
 	onNext,
 }: BrowseProfileCardProps) {
@@ -134,7 +135,10 @@ export default function BrowseProfileCard({
 									// biome-ignore lint/suspicious/noArrayIndexKey: pictures have no stable id
 									i
 								}`}
-								className={`block w-2 h-2 rounded-full transition-colors ${i === pictureIndex ? "bg-white" : "bg-white/35"}`}
+								className={cn(
+									"block w-2 h-2 rounded-full transition-colors",
+									i === pictureIndex ? "bg-white" : "bg-white/35",
+								)}
 							/>
 						))}
 					</div>
@@ -197,15 +201,15 @@ export default function BrowseProfileCard({
 						<img src={heartSvg} alt="" className="w-4 h-4" />
 						{fame}
 					</span>
-					{tag_count > 0 && (
-						<span className="text-foreground font-medium">
-							{tag_count} tag{tag_count > 1 ? "s" : ""} in common
-						</span>
-					)}
+				{tagCount > 0 && (
+					<span className="text-foreground font-medium">
+						{tagCount} tag{tagCount > 1 ? "s" : ""} in common
+					</span>
+				)}
 				</div>
 
 				<span className="text-xs text-muted-foreground/55">
-					Last seen {formatLastConnection(last_connection)}
+					Last seen {formatLastConnection(lastConnection)}
 				</span>
 
 				<div className="flex gap-3 pt-1">

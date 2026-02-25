@@ -44,16 +44,15 @@ export function useImages() {
 		},
 	});
 
+	const firstError =
+		imagesQuery.error ?? uploadMutation.error ?? deleteMutation.error;
+
 	return {
 		images: imagesQuery.data ?? [],
 		isLoading: imagesQuery.isLoading,
 		isUploading: uploadMutation.isPending,
 		isDeleting: deleteMutation.isPending,
-		error:
-			imagesQuery.error?.message ??
-			uploadMutation.error?.message ??
-			deleteMutation.error?.message ??
-			null,
+		error: firstError ? { message: firstError.message } : null,
 		uploadImage: uploadMutation.mutate,
 		deleteImage: deleteMutation.mutate,
 	};
