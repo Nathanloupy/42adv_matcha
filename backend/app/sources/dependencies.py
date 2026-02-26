@@ -61,11 +61,11 @@ def get_user(session: session, request: Request) -> None | User:
 
 	try:
 		if token is None:
-			raise HTTPException(status_code=401)
+			raise HTTPException(status_code=401, detail="token is none")
 		payload = jwt.decode(token, jwt_secret, algorithms=[jwt_algorithm])
-		user_id = payload.get("sub")
+		user_id = int(payload.get("sub"))
 		if user_id is None:
-			raise HTTPException(status_code=400, detail="a")
+			raise HTTPException(status_code=400)
 		result = session.execute(query, {"user_id": user_id})
 		user = result.fetchone()
 		if user is None:
