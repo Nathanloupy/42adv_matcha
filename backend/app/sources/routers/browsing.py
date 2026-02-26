@@ -38,7 +38,7 @@ async def browse(
 		WHERE username != :username
 		AND users_likes.id IS NULL
 		AND users_blocks.id IS NULL
-		AND completed == 1
+		AND completed = 1
 		AND (gender = :gender1 OR gender = :gender2)
 	"""
 	params: dict = {"current_user_id": user.id, "username": user.username}
