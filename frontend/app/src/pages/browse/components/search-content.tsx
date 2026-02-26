@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { fetchSearch } from "@/services/api";
 import type { SearchParams } from "@/services/api";
+import { useOptionsContext } from "@/hooks/useOptionsContext";
+import { sortAndFilterProfiles } from "@/lib/sort-and-filter-profiles";
 import { BrowseProfileCard } from "./browse-profile-card";
 
 interface SearchContentProps {
@@ -9,6 +12,10 @@ interface SearchContentProps {
 }
 
 export function SearchContent({ searchParams }: SearchContentProps) {
+	const navigate = useNavigate();
+	const { committedSort, committedMaxDistance, committedMinTags } =
+		useOptionsContext();
+
 	const [indexState, setIndexState] = useState({
 		params: searchParams,
 		index: 0,
@@ -23,20 +30,29 @@ export function SearchContent({ searchParams }: SearchContentProps) {
 		queryFn: () => fetchSearch(searchParams),
 	});
 
+	// Apply frontend sort + filters on the raw data
+	const profiles = useMemo(() => {
+		if (!data) return [];
+		return sortAndFilterProfiles(data, committedSort, {
+			maxDistance: committedMaxDistance,
+			minTags: committedMinTags,
+		});
+	}, [data, committedSort, committedMaxDistance, committedMinTags]);
+
 	async function advanceToNext() {
 		setIndexState({ params: searchParams, index: 0 });
 		await queryClient.invalidateQueries({ queryKey: ["search"] });
 	}
 
 	function next() {
-		if (!data) return;
-		const isLast = index === data.length - 1;
+		if (!profiles.length) return;
+		const isLast = index === profiles.length - 1;
 		if (isLast) {
 			advanceToNext();
 		} else {
 			setIndexState((prev) => ({
 				params: searchParams,
-				index: Math.min(prev.index + 1, (data?.length ?? 1) - 1),
+				index: Math.min(prev.index + 1, profiles.length - 1),
 			}));
 		}
 	}
@@ -66,13 +82,26 @@ export function SearchContent({ searchParams }: SearchContentProps) {
 			<div className="flex flex-col items-center justify-center h-full gap-2">
 				<span className="text-xl font-semibold text-white">No results</span>
 				<span className="text-muted-foreground text-sm">
-					Try adjusting your filters.
+					Try adjusting your search filters.
 				</span>
 			</div>
 		);
 	}
 
-	const profile = data[index];
+	if (profiles.length === 0) {
+		return (
+			<div className="flex flex-col items-center justify-center h-full gap-2">
+				<span className="text-xl font-semibold text-white">
+					No profiles match your filters
+				</span>
+				<span className="text-muted-foreground text-sm">
+					Try increasing the distance or lowering the common tags minimum.
+				</span>
+			</div>
+		);
+	}
+
+	const profile = profiles[index];
 	if (!profile) return null;
 
 	return (
@@ -81,6 +110,7 @@ export function SearchContent({ searchParams }: SearchContentProps) {
 			{...profile}
 			pictures={profile.images}
 			onNext={next}
+			onView={() => navigate(`/view?id=${profile.id}`)}
 		/>
 	);
 }

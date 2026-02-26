@@ -228,7 +228,7 @@ function OptionsDropdown() {
 						value={[maxDistance]}
 						onValueChange={(v) => setMaxDistance(v[0])}
 						min={1}
-						max={500}
+						max={2000}
 						step={1}
 						className="w-full"
 					/>
@@ -265,13 +265,13 @@ function OptionsDropdown() {
 							Search filters
 						</DropdownMenuLabel>
 
-					<DropdownMenuItem
-						onSelect={(e) => e.preventDefault()}
-						onPointerMove={(e) => e.preventDefault()}
-						onPointerLeave={(e) => e.preventDefault()}
-						className="cursor-default flex flex-col items-start gap-2"
-					>
-						<Label htmlFor="search-location">Location</Label>
+						<DropdownMenuItem
+							onSelect={(e) => e.preventDefault()}
+							onPointerMove={(e) => e.preventDefault()}
+							onPointerLeave={(e) => e.preventDefault()}
+							className="cursor-default flex flex-col items-start gap-2"
+						>
+							<Label htmlFor="search-location">Location</Label>
 							<Input
 								id="search-location"
 								type="text"
@@ -279,7 +279,6 @@ function OptionsDropdown() {
 								onChange={(e) =>
 									handleLocationChange(e.target.value)
 								}
-	
 								placeholder={
 									isGeocoding
 										? "Locating..."
@@ -287,7 +286,6 @@ function OptionsDropdown() {
 								}
 								disabled={isGeocoding}
 							/>
-
 						</DropdownMenuItem>
 
 						{tagsArr.length > 0 && (
@@ -325,10 +323,10 @@ function OptionsDropdown() {
 					</>
 				)}
 
-			<DropdownMenuItem
-				onSelect={(e) => e.preventDefault()}
-				className="cursor-default w-1/2 my-2 p-0 ml-auto"
-			>
+				<DropdownMenuItem
+					onSelect={(e) => e.preventDefault()}
+					className="cursor-default w-1/2 my-2 p-0 ml-auto"
+				>
 					<button
 						type="button"
 						onClick={applyOptions}

@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import type { SearchParams } from "@/services/api";
+import type { BrowseQueryParams, SearchParams } from "@/services/api";
 
 export type BrowseTab = "browse" | "search";
 export type SortField = "none" | "age" | "distance" | "fame" | "tags";
@@ -8,11 +8,12 @@ export type SortDirection = "asc" | "desc";
 export interface OptionsContextType {
 	activeTab: BrowseTab;
 	setActiveTab: (tab: BrowseTab) => void;
+
+	// Draft state (uncommitted, controlled by the UI)
 	sortField: SortField;
 	sortDirection: SortDirection;
 	setSortField: (field: SortField) => void;
 	toggleSortDirection: () => void;
-	searchParams: SearchParams;
 	ageRange: number[];
 	setAgeRange: (value: number[]) => void;
 	fameRange: number[];
@@ -26,6 +27,14 @@ export interface OptionsContextType {
 	setMaxDistance: (value: number) => void;
 	minTags: number;
 	setMinTags: (value: number) => void;
+
+	// Committed state (set by "Apply options", consumed by content components)
+	browseParams: BrowseQueryParams;
+	searchParams: SearchParams;
+	committedSort: { field: SortField; direction: SortDirection };
+	committedMaxDistance: number;
+	committedMinTags: number;
+
 	applyOptions: () => void;
 	hasChanges: boolean;
 }

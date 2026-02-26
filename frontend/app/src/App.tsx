@@ -14,6 +14,7 @@ import RequestResetPassword from "./pages/auth/RequestResetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 import NotFound from "./pages/NotFound";
+import View from "./pages/view/View";
 
 export default function App() {
 	return (
@@ -59,6 +60,14 @@ export default function App() {
 						element={
 							<ProtectedRoute>
 								<Profile />
+							</ProtectedRoute>
+						}
+					/>
+					<Route
+						path="/view"
+						element={
+							<ProtectedRoute>
+								<View />
 							</ProtectedRoute>
 						}
 					/>

@@ -2,15 +2,19 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { geocodeAddress } from "@/services/geolocation";
-import type { SearchParams } from "@/services/api";
+import type { BrowseQueryParams, SearchParams } from "@/services/api";
 import { OptionsContext } from "@/contexts/options-context";
 import type { BrowseTab, SortField, SortDirection } from "@/contexts/options-context";
 
-const defaultSearchParams: SearchParams = {
+const defaultBrowseParams: BrowseQueryParams = {
 	ageMin: 3,
 	ageMax: 21,
 	fameMin: -1000,
 	fameMax: 1000,
+};
+
+const defaultSearchParams: SearchParams = {
+	...defaultBrowseParams,
 	location: null,
 	tags: null,
 };
@@ -49,9 +53,13 @@ export function OptionsProvider({ children }: { children: ReactNode }) {
 	const [maxDistance, setMaxDistance] = useState(100);
 	const [minTags, setMinTags] = useState(0);
 
-	// searchParams is a committed snapshot — only updated when the user clicks "Apply options"
-	const [searchParams, setSearchParams] = useState<SearchParams>(defaultSearchParams);
-	const [committed, setCommitted] = useState<CommittedState>(defaultCommitted);
+	// Committed snapshots — only updated when the user clicks "Apply options"
+	const [browseParams, setBrowseParams] =
+		useState<BrowseQueryParams>(defaultBrowseParams);
+	const [searchParams, setSearchParams] =
+		useState<SearchParams>(defaultSearchParams);
+	const [committed, setCommitted] =
+		useState<CommittedState>(defaultCommitted);
 
 	const hasChanges =
 		sortField !== committed.sortField ||
@@ -106,11 +114,16 @@ export function OptionsProvider({ children }: { children: ReactNode }) {
 			setIsGeocoding(false);
 		}
 
-		setSearchParams({
+		const rangeParams: BrowseQueryParams = {
 			ageMin: ageRange[0],
 			ageMax: ageRange[1],
 			fameMin: fameRange[0],
 			fameMax: fameRange[1],
+		};
+
+		setBrowseParams(rangeParams);
+		setSearchParams({
+			...rangeParams,
 			location: resolvedCoords,
 			tags: selectedTags.length > 0 ? selectedTags : null,
 		});
@@ -131,27 +144,39 @@ export function OptionsProvider({ children }: { children: ReactNode }) {
 			value={{
 				activeTab,
 				setActiveTab,
+
+				// Draft state
 				sortField,
 				sortDirection,
 				setSortField,
 				toggleSortDirection,
-				searchParams,
 				ageRange,
 				setAgeRange,
 				fameRange,
 				setFameRange,
 				selectedTags,
 				handleTagToggle,
-			locationText,
-			handleLocationChange,
-			isGeocoding,
-			maxDistance,
-			setMaxDistance,
-			minTags,
-			setMinTags,
-			applyOptions,
-			hasChanges,
-		}}
+				locationText,
+				handleLocationChange,
+				isGeocoding,
+				maxDistance,
+				setMaxDistance,
+				minTags,
+				setMinTags,
+
+				// Committed state
+				browseParams,
+				searchParams,
+				committedSort: {
+					field: committed.sortField,
+					direction: committed.sortDirection,
+				},
+				committedMaxDistance: committed.maxDistance,
+				committedMinTags: committed.minTags,
+
+				applyOptions,
+				hasChanges,
+			}}
 		>
 			{children}
 		</OptionsContext.Provider>

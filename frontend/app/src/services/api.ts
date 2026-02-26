@@ -29,6 +29,9 @@ async function request<T>(
 	});
 
 	if (!response.ok) {
+		if (response.status === 401) {
+			window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+		}
 		const message = await parseErrorBody(response);
 		throw new ApiError(message, response.status);
 	}
@@ -197,13 +200,15 @@ export function deleteImage(uuid: string): Promise<void> {
 // ── Browse ──
 
 export interface BrowseProfile {
+	id: number;
 	username: string;
 	firstname: string;
 	surname: string;
 	age: number;
 	gender: number;
 	biography: string;
-	gps: number;
+	gps: string;
+	distance: number;
 	fame: number;
 	lastConnection: string;
 	tagCount: number;
@@ -214,37 +219,113 @@ function toBrowseProfile(raw: Record<string, unknown>): BrowseProfile {
 	return {
 		...raw,
 		lastConnection: raw.last_connection,
-		tagCount: raw.tag_count,
+		tagCount: raw.common_tags_count,
 	} as unknown as BrowseProfile;
 }
 
-export async function fetchBrowse(): Promise<BrowseProfile[]> {
-	const raw = await request<Record<string, unknown>[]>("/browse");
+// ── Browse ──
+
+export interface BrowseQueryParams {
+	ageMin: number;
+	ageMax: number;
+	fameMin: number;
+	fameMax: number;
+}
+
+function buildRangeQs(params: BrowseQueryParams): URLSearchParams {
+	const qs = new URLSearchParams();
+	qs.append("age_min", String(params.ageMin));
+	qs.append("age_max", String(params.ageMax));
+	qs.append("fame_min", String(params.fameMin));
+	qs.append("fame_max", String(params.fameMax));
+	return qs;
+}
+
+export async function fetchBrowse(params: BrowseQueryParams): Promise<BrowseProfile[]> {
+	const query = buildRangeQs(params).toString();
+	const raw = await request<Record<string, unknown>[]>(`/browse${query ? `?${query}` : ""}`);
 	return raw.map(toBrowseProfile);
 }
 
 // ── Search ──
 
 export interface SearchParams {
-	ageMin?: number | null;
-	ageMax?: number | null;
-	fameMin?: number | null;
-	fameMax?: number | null;
+	ageMin: number;
+	ageMax: number;
+	fameMin: number;
+	fameMax: number;
 	location?: string | null;
 	tags?: string[] | null;
 }
 
 export async function fetchSearch(params: SearchParams): Promise<BrowseProfile[]> {
-	const qs = new URLSearchParams();
-	if (params.ageMin != null) qs.append("age_min", String(params.ageMin));
-	if (params.ageMax != null) qs.append("age_max", String(params.ageMax));
-	if (params.fameMin != null) qs.append("fame_min", String(params.fameMin));
-	if (params.fameMax != null) qs.append("fame_max", String(params.fameMax));
+	const qs = buildRangeQs(params);
 	if (params.location) qs.append("location", params.location);
 	if (params.tags?.length) params.tags.forEach((t) => qs.append("tags", t));
 	const query = qs.toString();
 	const raw = await request<Record<string, unknown>[]>(`/search${query ? `?${query}` : ""}`);
 	return raw.map(toBrowseProfile);
+}
+
+// ── Likes / Views lists ──
+
+export interface LikesListEntry {
+	id: number;
+	firstname: string;
+	uuid: string;
+	image: string;
+}
+
+export function fetchMeLikes(): Promise<LikesListEntry[]> {
+	return request("/users/me/me_likes");
+}
+
+export function fetchLikesMe(): Promise<LikesListEntry[]> {
+	return request("/users/me/likes_me");
+}
+
+export function fetchViewsMe(): Promise<LikesListEntry[]> {
+	return request("/users/me/views_me");
+}
+
+// ── Social actions ──
+
+export function likeUser(id: number): Promise<void> {
+	return request(`/like?id=${id}`, { method: "POST" });
+}
+
+export function unlikeUser(id: number): Promise<void> {
+	return request(`/unlike?id=${id}`, { method: "DELETE" });
+}
+
+export function blockUser(id: number): Promise<void> {
+	return request(`/block?id=${id}`, { method: "POST" });
+}
+
+export function reportUser(id: number): Promise<void> {
+	return request(`/users/report?id=${id}`, { method: "POST" });
+}
+
+// ── View ──
+
+export interface ViewProfile {
+	id: number;
+	username: string;
+	firstname: string;
+	surname: string;
+	age: number;
+	gender: number;
+	sexual_preference: number;
+	biography: string;
+	gps: string;
+	fame: number;
+	last_connection: string;
+	tags: string[];
+	images: string[];
+}
+
+export function fetchUserView(id: number): Promise<ViewProfile> {
+	return request(`/view?id=${id}`);
 }
 
 // ── Tags ──
