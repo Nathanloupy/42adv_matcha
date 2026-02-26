@@ -21,6 +21,8 @@ router: APIRouter = APIRouter()
 )
 async def view(session: dependencies.session, user: dependencies.user, id: int):
 	query: str = "SELECT * FROM users WHERE id = :id"
+	query_tags: str = "SELECT * FROM users_tags WHERE user_id = :id"
+	query_images: str = "SELECT * FROM users_images WHERE user_id = :id"
 	query_check_already: str = "SELECT COUNT(*) FROM users_views WHERE user_id = :user_id AND other_id = :id"
 	query_update_view: str = "INSERT INTO users_views (user_id, other_id) VALUES (:user_id, :id)"
 	params: dict = {"user_id": user.id, "id": id}
@@ -43,6 +45,20 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 		if count == 0:
 			session.execute(text(query_update_view), params)
 			session.commit()
+		q_result = session.execute(text(query_tags), params)
+		q_tags = q_result.fetchall()
+		result["tags"] = []
+		if q_tags is not None:
+			result["tags"] = [tag[2] for tag in q_tags]
+		result["images"] = []
+		q_result = session.execute(text(query_images), params)
+		q_images = q_result.fetchall()
+		if q_images is not None:
+			new_array = []
+			for index, item in enumerate(q_images):
+				with open(users_route.UPLOAD_PATH + item[2] + ".jpg", "rb") as file:
+					new_array.append(base64.b64encode(file.read()).decode())
+			result["images"] = new_array
 		return result
 	except HTTPException:
 		raise
@@ -109,4 +125,32 @@ async def unlike(session: dependencies.session, user: dependencies.user, id: int
 	except HTTPException:
 		raise
 	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
+
+@router.post(
+	"/block",
+	tags=["view"]
+)
+async def block(session: dependencies.session, user: dependencies.user, id: int):
+	query: str = "INSERT INTO users_blocks (user_id, other_id) VALUES (:user_id, :id)"
+	query_check_already: str = "SELECT COUNT(*) FROM users_blocks WHERE user_id = :user_id AND other_id = :id"
+	params: dict = {"user_id": user.id, "id": id}
+
+	try:
+		if id == user.id:
+			raise HTTPException(status_code=400, detail="user can't like himself")
+		if user.completed == 0:
+			raise HTTPException(status_code=400, detail="user profile is not completed")
+		result = session.execute(text(query_check_already), params)
+		count = result.fetchone()[0]
+		if count > 0:
+			raise HTTPException(status_code=400, detail="user already blocked this profile")
+		session.execute(text(query), params)
+		session.commit()
+		return {"message": "user has been blocked"}
+	except HTTPException:
+		session.rollback()
+		raise
+	except Exception as exception:
+		session.rollback()
 		raise HTTPException(status_code=400, detail=str(exception))
