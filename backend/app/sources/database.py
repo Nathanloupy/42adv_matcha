@@ -13,7 +13,7 @@ CONNECT_ARGS = {"check_same_thread": False}
 ENGINE = create_engine(DATABASE_URL, connect_args=CONNECT_ARGS)
 IMAGES_DIR = "./users_images"
 
-API_URL = f"https://api.thecatapi.com/v1/images/search?limit=10&api_key={os.getenv('CATAPI_TOKEN')}"
+API_URL = f"https://api.thecatapi.com/v1/images/search?api_key={os.getenv('CATAPI_TOKEN')}"
 
 FIRST_NAMES = [
 	"Emma",
@@ -390,9 +390,14 @@ def initiliaze_database() -> None:
 		session.commit()
 
 
-def fetch_cat_images():
+def fetch_cat_images(page: int = 0, limit: int = 100):
+	"""
+	limit	1-100	Number of images to return between	1
+	page	0-n	The page number to use when Paginating through the images	0
+	order	ASC/DESC/RAND	The Order to return the images in by their upload date. RAND = random	RAND
+	"""
 	try:
-		response = requests.get(API_URL, timeout=30)
+		response = requests.get(f"{API_URL}&order=ASC&limit={str(limit)}&page={str(page)}", timeout=30)
 		if response.status_code == 200:
 			data = response.json()
 			return [img["url"] for img in data]
