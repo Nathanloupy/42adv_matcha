@@ -30,9 +30,14 @@ async def chat(session: dependencies.session, user: dependencies.user, id: int):
 		OR (user_id = :other_id AND other_id = :user_id)
 		ORDER BY time
 	"""
+	query_check: str = "SELECT COUNT(*) FROM users_connected WHERE user_id = :user_id AND other_id = :other_id"
 	params: dict = {"user_id": user.id, "other_id": id}
 
 	try:
+		result = session.execute(text(query_check), params)
+		c_result = result.fetchone()[0]
+		if c_result == 0:
+			raise HTTPException(status_code=400, detail="users are not connected")
 		result = session.execute(text(query), params)
 		m_result = result.fetchall()
 		if m_result is None:
@@ -48,12 +53,19 @@ async def chat(session: dependencies.session, user: dependencies.user, id: int):
 @router.post("/chat", tags=["chat"])
 async def chat(session: dependencies.session, user: dependencies.user, id: int, message: str):
 	query: str = "INSERT INTO users_chats (user_id, other_id, time, value) VALUES (:user_id, :other_id, :time, :value)"
+	query_check: str = "SELECT COUNT(*) FROM users_connected WHERE user_id = :user_id AND other_id = :other_id"
 	params: dict = {"user_id": user.id, "other_id": id, "time": datetime.now(), "value": message}
 
 	try:
+		result = session.execute(text(query_check), params)
+		c_result = result.fetchone()[0]
+		if c_result == 0:
+			raise HTTPException(status_code=400, detail="users are not connected")
 		session.execute(text(query), params)
 		session.commit()
 		return {"message": "ok"}
+	except HTTPException:
+		raise
 	except Exception as exception:
 		session.rollback()
 		raise HTTPException(status_code=400, detail=str(exception))
