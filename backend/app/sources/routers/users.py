@@ -57,15 +57,15 @@ async def me(session: dependencies.session, user: dependencies.user):
 	return user
 
 @router.get(
-		"/users/views",
+		"/users/me/views_me",
 		tags=["users"],
 		)
-async def me_views(session: dependencies.session, user: dependencies.user):
+async def views_me(session: dependencies.session, user: dependencies.user):
 	query: str = """
 		SELECT users.id, users.username, users_images.uuid FROM users
-		LEFT JOIN users_views ON users.id = users_views.other_id
+		LEFT JOIN users_views ON users.id = users_views.user_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
-		WHERE users_views.user_id = :user_id
+		WHERE users_views.other_id = :user_id
 	"""
 	params: dict = {"user_id": user.id}
 	query_result: None | object = None
@@ -88,7 +88,7 @@ async def me_views(session: dependencies.session, user: dependencies.user):
 		raise HTTPException(status_code=400, detail=str(exception))
 
 @router.get(
-	"/users/likes",
+	"/users/me/me_likes",
 	tags=["users"],
 )
 async def me_likes(session: dependencies.session, user: dependencies.user):
@@ -97,6 +97,37 @@ async def me_likes(session: dependencies.session, user: dependencies.user):
 		LEFT JOIN users_likes ON users.id = users_likes.other_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
 		WHERE users_likes.user_id = :user_id
+	"""
+	params: dict = {"user_id": user.id}
+	query_result: None | object = None
+
+	try:
+		if user.completed == 0:
+			raise HTTPException(status_code=400, detail="user profile is not completed")
+		query_result = session.execute(text(query), params)
+		result = query_result.fetchall()
+		if result is None:
+			raise HTTPException(status_code=404)
+		result = [dict(x._mapping) for x in result]
+		for index, item in enumerate(result):
+			with open(UPLOAD_PATH + item["uuid"] + ".jpg", "rb") as file:
+				result[index]["image"] = base64.b64encode(file.read()).decode()
+		return result
+	except HTTPException:
+		raise
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
+
+@router.get(
+	"/users/me/likes_me",
+	tags=["users"],
+)
+async def likes_me(session: dependencies.session, user: dependencies.user):
+	query: str = """
+		SELECT users.id, users.username, users_images.uuid FROM users
+		LEFT JOIN users_likes ON users.id = users_likes.user_id
+		LEFT JOIN users_images ON users.id = users_images.user_id
+		WHERE users_likes.other_id = :user_id
 	"""
 	params: dict = {"user_id": user.id}
 	query_result: None | object = None
@@ -157,7 +188,8 @@ async def report(session: dependencies.session, user: dependencies.user, id: int
 	try:
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
-		await auth.send_email(os.getenv("SERVER_MAIL_USERNAME", ""), f"{user.username} reported a user", f"{user.username} think this user id '{id}' need to be checked")
+		await auth.send_email(os.getenv("BACKEND_MAIL_USERNAME", ""), f"{user.username} reported a user", f"{user.username} think this user id '{id}' need to be checked")
+		return {"message": "ok"}
 	except HTTPException:
 		raise
 	except Exception as exception:
@@ -225,7 +257,7 @@ async def me_patch(
 	return {"message": "ok"}
 
 @router.get("/users/tags", tags=["users"])
-async def me_tags(session: dependencies.session, user: dependencies.user):
+async def tags(session: dependencies.session, user: dependencies.user):
 	return TAGS
 
 @router.get("/users/me/tags", tags=["users"])

@@ -81,7 +81,6 @@ async def browse(session: dependencies.session, user: dependencies.user):
 	except Exception as exception:
 		raise HTTPException(status_code=400)
 
-
 @router.get("/search", tags=["browsing"])
 async def search(
 	session: dependencies.session,
@@ -94,7 +93,11 @@ async def search(
 	tags: list[str] | None = Query(None),
 ):
 	query: str = """
-		SELECT * FROM users WHERE users.id != :id
+		SELECT * FROM users
+		LEFT JOIN users_blocks ON users.id = users_blocks.other_id
+			AND users_blocks.user_id = :current_user_id
+		WHERE users.id != :id
+		AND users_blocks.id IS NULL
 		AND (gender = :gender1 OR gender = :gender2)
 	"""
 	query_tags: str = "SELECT tag FROM users_tags WHERE user_id = :user_id"
