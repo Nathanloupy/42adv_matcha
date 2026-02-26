@@ -70,6 +70,7 @@ dependencies = [
     { name = "pyjwt" },
     { name = "requests" },
     { name = "sqlmodel" },
+    { name = "websockets" },
 ]
 
 [package.metadata]
@@ -83,6 +84,7 @@ requires-dist = [
     { name = "pyjwt", specifier = ">=2.11.0" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "sqlmodel", specifier = ">=0.0.33" },
+    { name = "websockets", specifier = ">=16.0" },
 ]
 
 [[package]]

@@ -62,10 +62,11 @@ async def me(session: dependencies.session, user: dependencies.user):
 		)
 async def views_me(session: dependencies.session, user: dependencies.user):
 	query: str = """
-		SELECT users.id, users.username, users_images.uuid FROM users
+		SELECT users.id, users.firstname, users_images.uuid FROM users
 		LEFT JOIN users_views ON users.id = users_views.user_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
 		WHERE users_views.other_id = :user_id
+		GROUP BY users.id
 	"""
 	params: dict = {"user_id": user.id}
 	query_result: None | object = None
@@ -93,10 +94,11 @@ async def views_me(session: dependencies.session, user: dependencies.user):
 )
 async def me_likes(session: dependencies.session, user: dependencies.user):
 	query: str = """
-		SELECT users.id, users.username, users_images.uuid FROM users
+		SELECT users.id, users.username, users.firstname, users_images.uuid FROM users
 		LEFT JOIN users_likes ON users.id = users_likes.other_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
 		WHERE users_likes.user_id = :user_id
+		GROUP BY users.id
 	"""
 	params: dict = {"user_id": user.id}
 	query_result: None | object = None
@@ -124,10 +126,11 @@ async def me_likes(session: dependencies.session, user: dependencies.user):
 )
 async def likes_me(session: dependencies.session, user: dependencies.user):
 	query: str = """
-		SELECT users.id, users.username, users_images.uuid FROM users
+		SELECT users.id, users.firstname, users_images.uuid FROM users
 		LEFT JOIN users_likes ON users.id = users_likes.user_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
 		WHERE users_likes.other_id = :user_id
+		GROUP BY users.id
 	"""
 	params: dict = {"user_id": user.id}
 	query_result: None | object = None
