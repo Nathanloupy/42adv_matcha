@@ -65,7 +65,10 @@ async def views_me(session: dependencies.session, user: dependencies.user):
 		SELECT users.id, users.firstname, users_images.uuid FROM users
 		LEFT JOIN users_views ON users.id = users_views.user_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
+		LEFT JOIN users_blocks ON users.id = users_blocks.other_id
+			AND users_blocks.user_id = :user_id
 		WHERE users_views.other_id = :user_id
+		AND users_blocks.id IS NULL
 		GROUP BY users.id
 	"""
 	params: dict = {"user_id": user.id}
@@ -97,7 +100,10 @@ async def me_likes(session: dependencies.session, user: dependencies.user):
 		SELECT users.id, users.username, users.firstname, users_images.uuid FROM users
 		LEFT JOIN users_likes ON users.id = users_likes.other_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
+		LEFT JOIN users_blocks ON users.id = users_blocks.other_id
+			AND users_blocks.user_id = :user_id
 		WHERE users_likes.user_id = :user_id
+		AND users_blocks.id IS NULL
 		GROUP BY users.id
 	"""
 	params: dict = {"user_id": user.id}
@@ -129,7 +135,10 @@ async def likes_me(session: dependencies.session, user: dependencies.user):
 		SELECT users.id, users.firstname, users_images.uuid FROM users
 		LEFT JOIN users_likes ON users.id = users_likes.user_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
+		LEFT JOIN users_blocks ON users.id = users_blocks.other_id
+			AND users_blocks.user_id = :user_id
 		WHERE users_likes.other_id = :user_id
+		AND users_blocks.id IS NULL
 		GROUP BY users.id
 	"""
 	params: dict = {"user_id": user.id}
