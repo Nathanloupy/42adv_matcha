@@ -32,7 +32,7 @@ function LastMessageSentArrow({ className }: { className?: string }) {
 	);
 }
 
-export default function Chat({
+export function Chat({
 	name,
 	id,
 	avatar,

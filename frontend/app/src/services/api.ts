@@ -29,6 +29,9 @@ async function request<T>(
 	});
 
 	if (!response.ok) {
+		if (response.status === 401) {
+			window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+		}
 		const message = await parseErrorBody(response);
 		throw new ApiError(message, response.status);
 	}
@@ -101,13 +104,13 @@ export function verifyEmail(token: string): Promise<void> {
 
 export interface ResetPasswordData {
 	token: string;
-	new_password: string;
+	newPassword: string;
 }
 
 export function resetPassword(data: ResetPasswordData): Promise<void> {
 	const params = new URLSearchParams({
 		token: data.token,
-		new_password: data.new_password,
+		new_password: data.newPassword,
 	});
 	return request(`/reset-password?${params}`, { method: "POST" });
 }
@@ -126,7 +129,7 @@ export interface ProfileData {
 	gps: string;
 	biography: string;
 	gender: boolean;
-	sexual_preference: number;
+	sexualPreference: number;
 }
 
 export interface UpdateProfileData {
@@ -136,19 +139,24 @@ export interface UpdateProfileData {
 	age: number;
 	biography: string;
 	gender: boolean;
-	sexual_preference: number;
+	sexualPreference: number;
 	gps?: string;
 }
 
-export function fetchProfile(): Promise<ProfileData> {
-	return request("/users/me");
+export async function fetchProfile(): Promise<ProfileData> {
+	const raw = await request<Record<string, unknown>>("/users/me");
+	return {
+		...raw,
+		sexualPreference: raw.sexual_preference,
+	} as unknown as ProfileData;
 }
 
 export function updateProfile(data: UpdateProfileData): Promise<void> {
+	const { sexualPreference, ...rest } = data;
 	return request("/users/me", {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(data),
+		body: JSON.stringify({ ...rest, sexual_preference: sexualPreference }),
 	});
 }
 
@@ -192,21 +200,132 @@ export function deleteImage(uuid: string): Promise<void> {
 // ── Browse ──
 
 export interface BrowseProfile {
+	id: number;
 	username: string;
 	firstname: string;
 	surname: string;
 	age: number;
 	gender: number;
 	biography: string;
-	gps: number;
+	gps: string;
+	distance: number;
 	fame: number;
-	last_connection: string;
-	tag_count: number;
+	lastConnection: string;
+	tagCount: number;
 	images: string[];
 }
 
-export function fetchBrowse(): Promise<BrowseProfile[]> {
-	return request("/browse");
+function toBrowseProfile(raw: Record<string, unknown>): BrowseProfile {
+	return {
+		...raw,
+		lastConnection: raw.last_connection,
+		tagCount: raw.common_tags_count,
+	} as unknown as BrowseProfile;
+}
+
+// ── Browse ──
+
+export interface BrowseQueryParams {
+	ageMin: number;
+	ageMax: number;
+	fameMin: number;
+	fameMax: number;
+}
+
+function buildRangeQs(params: BrowseQueryParams): URLSearchParams {
+	const qs = new URLSearchParams();
+	qs.append("age_min", String(params.ageMin));
+	qs.append("age_max", String(params.ageMax));
+	qs.append("fame_min", String(params.fameMin));
+	qs.append("fame_max", String(params.fameMax));
+	return qs;
+}
+
+export async function fetchBrowse(params: BrowseQueryParams): Promise<BrowseProfile[]> {
+	const query = buildRangeQs(params).toString();
+	const raw = await request<Record<string, unknown>[]>(`/browse${query ? `?${query}` : ""}`);
+	return raw.map(toBrowseProfile);
+}
+
+// ── Search ──
+
+export interface SearchParams {
+	ageMin: number;
+	ageMax: number;
+	fameMin: number;
+	fameMax: number;
+	location?: string | null;
+	tags?: string[] | null;
+}
+
+export async function fetchSearch(params: SearchParams): Promise<BrowseProfile[]> {
+	const qs = buildRangeQs(params);
+	if (params.location) qs.append("location", params.location);
+	if (params.tags?.length) params.tags.forEach((t) => qs.append("tags", t));
+	const query = qs.toString();
+	const raw = await request<Record<string, unknown>[]>(`/search${query ? `?${query}` : ""}`);
+	return raw.map(toBrowseProfile);
+}
+
+// ── Likes / Views lists ──
+
+export interface LikesListEntry {
+	id: number;
+	firstname: string;
+	uuid: string;
+	image: string;
+}
+
+export function fetchMeLikes(): Promise<LikesListEntry[]> {
+	return request("/users/me/me_likes");
+}
+
+export function fetchLikesMe(): Promise<LikesListEntry[]> {
+	return request("/users/me/likes_me");
+}
+
+export function fetchViewsMe(): Promise<LikesListEntry[]> {
+	return request("/users/me/views_me");
+}
+
+// ── Social actions ──
+
+export function likeUser(id: number): Promise<void> {
+	return request(`/like?id=${id}`, { method: "POST" });
+}
+
+export function unlikeUser(id: number): Promise<void> {
+	return request(`/unlike?id=${id}`, { method: "DELETE" });
+}
+
+export function blockUser(id: number): Promise<void> {
+	return request(`/block?id=${id}`, { method: "POST" });
+}
+
+export function reportUser(id: number): Promise<void> {
+	return request(`/users/report?id=${id}`, { method: "POST" });
+}
+
+// ── View ──
+
+export interface ViewProfile {
+	id: number;
+	username: string;
+	firstname: string;
+	surname: string;
+	age: number;
+	gender: number;
+	sexual_preference: number;
+	biography: string;
+	gps: string;
+	fame: number;
+	last_connection: string;
+	tags: string[];
+	images: string[];
+}
+
+export function fetchUserView(id: number): Promise<ViewProfile> {
+	return request(`/view?id=${id}`);
 }
 
 // ── Tags ──

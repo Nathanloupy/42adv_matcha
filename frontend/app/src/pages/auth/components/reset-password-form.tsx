@@ -15,7 +15,7 @@ interface ResetPasswordFormProps extends Omit<
 	React.ComponentProps<"div">,
 	"onSubmit"
 > {
-	onSubmit: (data: { token: string; new_password: string }) => void;
+	onSubmit: (data: { token: string; newPassword: string }) => void;
 	token: string;
 	isLoading?: boolean;
 }
@@ -45,7 +45,7 @@ export function ResetPasswordForm({
 			return;
 		}
 
-		onSubmit({ token, new_password: password });
+		onSubmit({ token, newPassword: password });
 	}
 
 	return (

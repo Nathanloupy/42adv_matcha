@@ -1,4 +1,4 @@
-import Chat, { type ChatProps } from "./components/Chat";
+import { Chat, type ChatProps } from "./components/chat";
 
 const mockChats: ChatProps[] = [
 	{

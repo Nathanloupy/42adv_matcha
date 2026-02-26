@@ -48,17 +48,18 @@ export function useTags() {
 		},
 	});
 
+	const firstError =
+		allTagsQuery.error ??
+		myTagsQuery.error ??
+		addMutation.error ??
+		removeMutation.error;
+
 	return {
 		allTags: allTagsQuery.data ?? [],
 		myTags: myTagsQuery.data ?? [],
 		isLoading: addMutation.isPending || removeMutation.isPending,
 		isTagsLoading: allTagsQuery.isLoading || myTagsQuery.isLoading,
-		error:
-			allTagsQuery.error?.message ??
-			myTagsQuery.error?.message ??
-			addMutation.error?.message ??
-			removeMutation.error?.message ??
-			null,
+		error: firstError ? { message: firstError.message } : null,
 		addTag: addMutation.mutate,
 		removeTag: removeMutation.mutate,
 	};

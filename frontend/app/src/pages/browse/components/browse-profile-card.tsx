@@ -1,50 +1,75 @@
 import { useState } from "react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { likeUser, unlikeUser, blockUser, reportUser } from "@/services/api";
 import likeSvg from "@/assets/like.svg";
+import unlikeSvg from "@/assets/unlike.svg";
+import viewSvg from "@/assets/view.svg";
 import blockSvg from "@/assets/block.svg";
 import reportSvg from "@/assets/report.svg";
 import locationSvg from "@/assets/location-pin.svg";
+import distanceSvg from "@/assets/distance.svg";
 import heartSvg from "@/assets/heart.svg";
 import maleSvg from "@/assets/male.svg";
 import femaleSvg from "@/assets/female.svg";
 
 interface BrowseProfileCardProps {
+	id: number;
 	username: string;
 	firstname: string;
 	surname: string;
 	age: number;
 	gender: number;
 	biography: string;
-	gps: number;
+	gps: string;
+	distance: number;
 	fame: number;
-	last_connection: string;
-	tag_count: number;
+	lastConnection: string;
+	tagCount: number;
 	pictures?: string[];
+	isLiked: boolean;
 	onNext: () => void;
+	onView: () => void;
+	onLikeToggle: () => void;
 }
 
 export type { BrowseProfileCardProps };
 
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
 function formatLastConnection(raw: string): string {
 	const date = new Date(raw);
 	if (Number.isNaN(date.getTime())) return raw;
+
+	if (Date.now() - date.getTime() < FIVE_MINUTES_MS) {
+		return "Currently online";
+	}
+
 	return date.toLocaleDateString(undefined, {
 		year: "numeric",
 		month: "short",
 		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
 	});
 }
 
-export default function BrowseProfileCard({
+export function BrowseProfileCard({
+	id,
 	firstname,
 	age,
 	gender,
 	biography,
 	gps,
+	distance,
 	fame,
-	last_connection,
-	tag_count,
+	lastConnection,
+	tagCount,
 	pictures = [],
+	isLiked,
 	onNext,
+	onView,
+	onLikeToggle,
 }: BrowseProfileCardProps) {
 	const [pictureIndex, setPictureIndex] = useState(0);
 
@@ -60,6 +85,9 @@ export default function BrowseProfileCard({
 		e.stopPropagation();
 		setPictureIndex((i) => (i + 1) % pictures.length);
 	}
+
+	const lastConnectionText = formatLastConnection(lastConnection);
+	const isOnline = lastConnectionText === "Currently online";
 
 	return (
 		<div className="h-full w-full flex flex-col bg-card text-card-foreground overflow-hidden rounded-lg border border-border">
@@ -134,7 +162,12 @@ export default function BrowseProfileCard({
 									// biome-ignore lint/suspicious/noArrayIndexKey: pictures have no stable id
 									i
 								}`}
-								className={`block w-2 h-2 rounded-full transition-colors ${i === pictureIndex ? "bg-white" : "bg-white/35"}`}
+								className={cn(
+									"block w-2 h-2 rounded-full transition-colors",
+									i === pictureIndex
+										? "bg-white"
+										: "bg-white/35",
+								)}
 							/>
 						))}
 					</div>
@@ -143,7 +176,20 @@ export default function BrowseProfileCard({
 				<button
 					type="button"
 					className="absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
-					onClick={() => {}}
+					onClick={() => {
+						blockUser(id)
+							.then(() => {
+								toast.success("User blocked");
+								onNext();
+							})
+							.catch((e: unknown) =>
+								toast.error(
+									e instanceof Error
+										? e.message
+										: "Failed to block",
+								),
+							);
+					}}
 					title="Block profile"
 				>
 					<img
@@ -155,7 +201,17 @@ export default function BrowseProfileCard({
 				<button
 					type="button"
 					className="absolute top-3 right-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
-					onClick={() => {}}
+					onClick={() => {
+						reportUser(id)
+							.then(() => toast.success("User reported"))
+							.catch((e: unknown) =>
+								toast.error(
+									e instanceof Error
+										? e.message
+										: "Failed to report",
+								),
+							);
+					}}
 					title="Report profile"
 				>
 					<img
@@ -190,40 +246,102 @@ export default function BrowseProfileCard({
 
 				<div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
 					<span className="flex items-center gap-1.5">
+						<img
+							src={distanceSvg}
+							alt=""
+							className="invert w-4 h-4"
+						/>
+						{distance} km
+					</span>
+					<span className="flex items-center gap-1.5">
 						<img src={locationSvg} alt="" className="w-4 h-4" />
-						{gps} km
+						{gps
+							.split(",")
+							.map((n) => (Math.trunc(+n * 100) / 100).toFixed(2))
+							.join(",")}{" "}
 					</span>
 					<span className="flex items-center gap-1.5">
 						<img src={heartSvg} alt="" className="w-4 h-4" />
 						{fame}
 					</span>
-					{tag_count > 0 && (
+					{tagCount > 0 && (
 						<span className="text-foreground font-medium">
-							{tag_count} tag{tag_count > 1 ? "s" : ""} in common
+							{tagCount} tag{tagCount > 1 ? "s" : ""} in common
 						</span>
 					)}
 				</div>
 
-				<span className="text-xs text-muted-foreground/55">
-					Last seen {formatLastConnection(last_connection)}
+				<span
+					className={cn(
+						"text-xs",
+						isOnline
+							? "text-green-400 font-medium"
+							: "text-muted-foreground/55",
+					)}
+				>
+					{isOnline
+						? lastConnectionText
+						: `Last seen ${lastConnectionText}`}
 				</span>
 
 				<div className="flex gap-3 pt-1">
+				{isLiked ? (
 					<button
 						type="button"
-						onClick={() => {}}
-					className="group flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-pink-400/40 text-sm font-medium text-pink-400 hover:bg-pink-500/10 hover:border-pink-400 hover:text-pink-300 hover:scale-105 active:scale-95 active:bg-pink-500/10 active:border-pink-400 active:text-pink-300 transition-all duration-150 cursor-pointer"
-					aria-label="Like profile"
-				>
-					<img src={likeSvg} alt="" className="w-4 h-4 transition-transform duration-150 group-hover:scale-125 group-active:scale-125 group-hover:drop-shadow-[0_0_6px_rgba(244,114,182,0.8)] group-active:drop-shadow-[0_0_6px_rgba(244,114,182,0.8)]" />
+						onClick={() => {
+							unlikeUser(id)
+								.then(() => { toast.success("Unliked"); onLikeToggle(); })
+								.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to unlike"));
+						}}
+						className="group flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-pink-400/60 bg-pink-500/10 text-sm font-medium text-pink-300 hover:bg-pink-500/20 hover:border-pink-400 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer"
+						aria-label="Unlike profile"
+					>
+						<img
+							src={unlikeSvg}
+							alt=""
+							className="w-4 h-4 transition-transform duration-150 group-hover:scale-125 group-active:scale-125"
+						/>
+						Unlike
+					</button>
+				) : (
+					<button
+						type="button"
+						onClick={() => {
+							likeUser(id)
+								.then(() => { toast.success("Liked!"); onLikeToggle(); onNext(); })
+								.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to like"));
+						}}
+						className="group flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-pink-400/40 text-sm font-medium text-pink-400 hover:bg-pink-500/10 hover:border-pink-400 hover:text-pink-300 hover:scale-105 active:scale-95 active:bg-pink-500/10 active:border-pink-400 active:text-pink-300 transition-all duration-150 cursor-pointer"
+						aria-label="Like profile"
+					>
+						<img
+							src={likeSvg}
+							alt=""
+							className="w-4 h-4 transition-transform duration-150 group-hover:scale-125 group-active:scale-125 group-hover:drop-shadow-[0_0_6px_rgba(244,114,182,0.8)] group-active:drop-shadow-[0_0_6px_rgba(244,114,182,0.8)]"
+						/>
 						Like
+					</button>
+				)}
+					<button
+						type="button"
+						onClick={onView}
+						className="group flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-cyan-400/40 text-sm font-medium text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400 hover:text-cyan-300 hover:scale-105 active:scale-95 active:bg-cyan-500/10 active:border-cyan-400 active:text-cyan-300 transition-all duration-150 cursor-pointer"
+						aria-label="View profile"
+						title="View profile"
+					>
+						<img
+							src={viewSvg}
+							alt=""
+							className="w-4 h-4 transition-transform duration-150 group-hover:scale-125 group-active:scale-125 group-hover:drop-shadow-[0_0_6px_rgba(34,211,238,0.8)] group-active:drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]"
+						/>
+						View
 					</button>
 				<button
 					type="button"
 					onClick={() => setTimeout(onNext, 200)}
-					className="flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-border text-sm font-medium hover:bg-muted hover:border-muted-foreground/40 hover:translate-x-0.5 active:bg-muted active:border-muted-foreground/40 active:translate-x-1 transition-all duration-150 cursor-pointer"
-						aria-label="Next profile"
-					>
+					className="group flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-border text-sm font-medium hover:bg-muted hover:border-muted-foreground/40 hover:scale-105 active:scale-95 active:bg-muted active:border-muted-foreground/40 transition-all duration-150 cursor-pointer"
+					aria-label="Next profile"
+				>
 						Next
 						<svg
 							className="w-4 h-4"
