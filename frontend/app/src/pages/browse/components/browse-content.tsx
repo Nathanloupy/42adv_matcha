@@ -39,14 +39,20 @@ export function BrowseContent() {
 		queryFn: fetchMeLikes,
 	});
 
-	// Apply frontend sort + filters on the raw data
+	// Build a set of already-liked IDs for fast lookup
+	const likedIds = useMemo(
+		() => new Set((meLikes ?? []).map((e) => e.id)),
+		[meLikes],
+	);
+
+	// Apply frontend sort + filters, then remove already-liked profiles
 	const profiles = useMemo(() => {
 		if (!data) return [];
 		return sortAndFilterProfiles(data, committedSort, {
 			maxDistance: committedMaxDistance,
 			minTags: committedMinTags,
-		});
-	}, [data, committedSort, committedMaxDistance, committedMinTags]);
+		}).filter((p) => !likedIds.has(p.id));
+	}, [data, committedSort, committedMaxDistance, committedMinTags, likedIds]);
 
 	// Prefetch next batch 2 profiles before the end
 	useEffect(() => {

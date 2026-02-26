@@ -308,7 +308,7 @@ export function BrowseProfileCard({
 						type="button"
 						onClick={() => {
 							likeUser(id)
-								.then(() => { toast.success("Liked!"); onLikeToggle(); onNext(); })
+								.then(() => { toast.success("Liked!"); onLikeToggle(); })
 								.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to like"));
 						}}
 						className="group flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-pink-400/40 text-sm font-medium text-pink-400 hover:bg-pink-500/10 hover:border-pink-400 hover:text-pink-300 hover:scale-105 active:scale-95 active:bg-pink-500/10 active:border-pink-400 active:text-pink-300 transition-all duration-150 cursor-pointer"

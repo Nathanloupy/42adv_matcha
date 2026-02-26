@@ -12,6 +12,13 @@ export default function Footer() {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 
+	function goToBrowse() {
+		queryClient.invalidateQueries({ queryKey: ["browse"] });
+		queryClient.invalidateQueries({ queryKey: ["search"] });
+		queryClient.invalidateQueries({ queryKey: ["me_likes"] });
+		navigate("/");
+	}
+
 	function goToLikes() {
 		queryClient.invalidateQueries({ queryKey: ["me_likes"] });
 		queryClient.invalidateQueries({ queryKey: ["likes_me"] });
@@ -27,9 +34,13 @@ export default function Footer() {
 					(!isAuthLoading && isAuthenticated) ? "" : "invisible",
 				)}
 			>
-				<Link to="/" className="flex justify-center">
+				<button
+					type="button"
+					onClick={goToBrowse}
+					className="flex justify-center cursor-pointer bg-transparent border-0 p-0"
+				>
 					<img src={catIcon} className="h-9" alt="Search" />
-				</Link>
+				</button>
 				<button
 					type="button"
 					onClick={goToLikes}
