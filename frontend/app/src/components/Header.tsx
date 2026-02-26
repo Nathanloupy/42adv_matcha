@@ -5,6 +5,8 @@ import { useOptionsContext } from "@/hooks/useOptionsContext";
 import { fetchAllTags } from "@/services/api";
 import { cn } from "@/lib/utils";
 import optionsIcon from "@/assets/options.svg";
+import increasingArrow from "@/assets/increasing-arrow.svg";
+import decreasingArrow from "@/assets/decreasing-arrow.svg";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -58,6 +60,7 @@ export default function Header() {
 
 function OptionsDropdown() {
 	const {
+		activeTab,
 		sortField,
 		sortDirection,
 		setSortField,
@@ -74,9 +77,9 @@ function OptionsDropdown() {
 		handleTagToggle,
 		locationText,
 		handleLocationChange,
-		handleLocationKeyDown,
-		locationError,
 		isGeocoding,
+		applyOptions,
+		hasChanges,
 	} = useOptionsContext();
 
 	const { data: allTags } = useQuery({
@@ -86,7 +89,6 @@ function OptionsDropdown() {
 
 	const tagsArr = allTags ?? [];
 	const selectedSet = new Set(selectedTags);
-	console.log({ minTags });
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger className="cursor-pointer">
@@ -122,7 +124,7 @@ function OptionsDropdown() {
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="none">None</SelectItem>
+								<SelectItem value="none">Default</SelectItem>
 								<SelectItem value="age">Age</SelectItem>
 								<SelectItem value="distance">
 									Distance
@@ -139,14 +141,26 @@ function OptionsDropdown() {
 							<button
 								type="button"
 								onClick={toggleSortDirection}
-								className="flex items-center justify-center h-9 w-9 shrink-0 rounded-md border border-input text-sm hover:bg-muted transition-colors cursor-pointer"
+								className="flex items-center justify-center h-9 w-9 shrink-0 rounded-md border border-input hover:bg-muted transition-colors cursor-pointer"
 								title={
 									sortDirection === "asc"
 										? "Ascending"
 										: "Descending"
 								}
 							>
-								{sortDirection === "asc" ? "↑" : "↓"}
+								<img
+									src={
+										sortDirection === "asc"
+											? increasingArrow
+											: decreasingArrow
+									}
+									className="h-5 w-5"
+									alt={
+										sortDirection === "asc"
+											? "Ascending"
+											: "Descending"
+									}
+								/>
 							</button>
 						)}
 					</div>
@@ -224,31 +238,6 @@ function OptionsDropdown() {
 					onSelect={(e) => e.preventDefault()}
 					className="cursor-default flex flex-col items-start gap-2"
 				>
-					<Label htmlFor="search-location">Location</Label>
-					<Input
-						id="search-location"
-						type="text"
-						value={locationText}
-						onChange={(e) => handleLocationChange(e.target.value)}
-						onKeyDown={handleLocationKeyDown}
-						placeholder={
-							isGeocoding
-								? "Locating..."
-								: "Enter a city or address"
-						}
-						disabled={isGeocoding}
-					/>
-					{locationError && (
-						<p className="text-sm text-destructive">
-							{locationError}
-						</p>
-					)}
-				</DropdownMenuItem>
-
-				<DropdownMenuItem
-					onSelect={(e) => e.preventDefault()}
-					className="cursor-default flex flex-col items-start gap-2"
-				>
 					<div className="flex items-center justify-between gap-2 w-full">
 						<Label htmlFor="search-min-tags">Common tags</Label>
 						<span className="text-muted-foreground text-sm">
@@ -267,34 +256,88 @@ function OptionsDropdown() {
 						className="w-full"
 					/>
 				</DropdownMenuItem>
-				{tagsArr.length > 0 && (
+
+				{activeTab === "search" && (
+					<>
+						<DropdownMenuSeparator />
+
+						<DropdownMenuLabel className="font-bold">
+							Search filters
+						</DropdownMenuLabel>
+
 					<DropdownMenuItem
 						onSelect={(e) => e.preventDefault()}
+						onPointerMove={(e) => e.preventDefault()}
+						onPointerLeave={(e) => e.preventDefault()}
 						className="cursor-default flex flex-col items-start gap-2"
 					>
-						<Label>Tags</Label>
-						<div className="flex flex-wrap gap-1.5">
-							{tagsArr.map((tag) => {
-								const selected = selectedSet.has(tag);
-								return (
-									<button
-										key={tag}
-										type="button"
-										onClick={() => handleTagToggle(tag)}
-										className={cn(
-											"rounded-full border px-2.5 py-0.5 text-xs transition-colors cursor-pointer",
-											selected
-												? "border-primary bg-primary text-primary-foreground"
-												: "border-input bg-transparent text-foreground hover:bg-muted",
-										)}
-									>
-										{selected ? `${tag} \u2715` : tag}
-									</button>
-								);
-							})}
-						</div>
-					</DropdownMenuItem>
+						<Label htmlFor="search-location">Location</Label>
+							<Input
+								id="search-location"
+								type="text"
+								value={locationText}
+								onChange={(e) =>
+									handleLocationChange(e.target.value)
+								}
+	
+								placeholder={
+									isGeocoding
+										? "Locating..."
+										: "Enter a city or address"
+								}
+								disabled={isGeocoding}
+							/>
+
+						</DropdownMenuItem>
+
+						{tagsArr.length > 0 && (
+							<DropdownMenuItem
+								onSelect={(e) => e.preventDefault()}
+								className="cursor-default flex flex-col items-start gap-2"
+							>
+								<Label>Tags</Label>
+								<div className="flex flex-wrap gap-1.5">
+									{tagsArr.map((tag) => {
+										const selected = selectedSet.has(tag);
+										return (
+											<button
+												key={tag}
+												type="button"
+												onClick={() =>
+													handleTagToggle(tag)
+												}
+												className={cn(
+													"rounded-full border px-2.5 py-0.5 text-xs transition-colors cursor-pointer",
+													selected
+														? "border-primary bg-primary text-primary-foreground"
+														: "border-input bg-transparent text-foreground hover:bg-muted",
+												)}
+											>
+												{selected
+													? `${tag} \u2715`
+													: tag}
+											</button>
+										);
+									})}
+								</div>
+							</DropdownMenuItem>
+						)}
+					</>
 				)}
+
+			<DropdownMenuItem
+				onSelect={(e) => e.preventDefault()}
+				className="cursor-default w-1/2 my-2 p-0 ml-auto"
+			>
+					<button
+						type="button"
+						onClick={applyOptions}
+						disabled={!hasChanges}
+						className="w-full rounded-sm bg-primary text-primary-foreground transition-colors p-2 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed enabled:hover:bg-primary/90 enabled:cursor-pointer"
+					>
+						Apply options
+					</button>
+				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

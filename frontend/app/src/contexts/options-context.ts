@@ -21,13 +21,13 @@ export interface OptionsContextType {
 	handleTagToggle: (tag: string) => void;
 	locationText: string;
 	handleLocationChange: (value: string) => void;
-	handleLocationKeyDown: (e: React.KeyboardEvent) => void;
-	locationError: string;
 	isGeocoding: boolean;
 	maxDistance: number;
 	setMaxDistance: (value: number) => void;
 	minTags: number;
 	setMinTags: (value: number) => void;
+	applyOptions: () => void;
+	hasChanges: boolean;
 }
 
 export const OptionsContext = createContext<OptionsContextType | null>(null);
