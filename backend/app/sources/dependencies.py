@@ -1,4 +1,4 @@
-from fastapi import Depends, Cookie, Request, HTTPException
+from fastapi import Depends, Cookie, Request, HTTPException, WebSocket
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 
@@ -49,11 +49,10 @@ mail_config: ConnectionConfig = ConnectionConfig(
 )
 fast_mail: FastMail = FastMail(mail_config)
 frontend_url: str = os.getenv("FONTEND_URL", "http://localhost:30001/")
-ws_manager: dict = {}
 
 def get_user(session: session, request: Request) -> None | User:
 	token = request.cookies.get("access_token")
-	query: TextClause				= text("SELECT * FROM users WHERE username = :username")
+	query: TextClause				= text("SELECT * FROM users WHERE id = :user_id")
 	query_connection: TextClause	= text("UPDATE users SET last_connection = :time WHERE username = :username")
 	payload: dict | None			= None
 	username: str | None			= None
@@ -64,10 +63,10 @@ def get_user(session: session, request: Request) -> None | User:
 		if token is None:
 			raise HTTPException(status_code=401)
 		payload = jwt.decode(token, jwt_secret, algorithms=[jwt_algorithm])
-		username = payload.get("sub")
-		if username is None:
+		user_id = payload.get("sub")
+		if user_id is None:
 			raise HTTPException(status_code=400, detail="a")
-		result = session.execute(query, {"username": username})
+		result = session.execute(query, {"user_id": user_id})
 		user = result.fetchone()
 		if user is None:
 			raise HTTPException(status_code=404)
@@ -82,3 +81,21 @@ def get_user(session: session, request: Request) -> None | User:
 		raise HTTPException(status_code=400, detail=str(e))
 
 user = Annotated[User, Depends(get_user)]
+
+class ConnectionManager:
+	def __init__(self):
+		self.active_connections: dict[int, WebSocket] = {}
+
+	async def connect(self, user_id: int, websocket: WebSocket):
+		await websocket.accept()
+		self.active_connections[user_id] = websocket
+
+	def disconnect(self, user_id: int):
+		self.active_connections.pop(user_id, None)
+
+	async def send_to_user(self, user_id: int, message: str):
+		websocket = self.active_connections.get(user_id)
+		if websocket:
+			await websocket.send_text(message)
+
+ws_manager = ConnectionManager()
