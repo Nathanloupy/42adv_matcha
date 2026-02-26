@@ -1,12 +1,13 @@
 import { useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { fetchUserView } from "@/services/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchUserView, fetchMeLikes } from "@/services/api";
 import { ViewProfileCard } from "./components/view-profile-card";
 
 export default function View() {
 	const [searchParams] = useSearchParams();
 	const rawId = searchParams.get("id");
 	const id = rawId ? Number(rawId) : null;
+	const queryClient = useQueryClient();
 
 	const {
 		data: profile,
@@ -18,6 +19,18 @@ export default function View() {
 		queryFn: () => fetchUserView(id as number),
 		enabled: id !== null && !Number.isNaN(id),
 	});
+
+	const { data: meLikes } = useQuery({
+		queryKey: ["me_likes"],
+		queryFn: fetchMeLikes,
+		enabled: id !== null && !Number.isNaN(id),
+	});
+
+	const isLiked = meLikes?.some((entry) => entry.id === id) ?? false;
+
+	function onLikeToggle() {
+		queryClient.invalidateQueries({ queryKey: ["me_likes"] });
+	}
 
 	if (id === null || Number.isNaN(id)) {
 		return (
@@ -49,7 +62,7 @@ export default function View() {
 
 	return (
 		<div className="h-full p-4">
-			<ViewProfileCard {...profile} />
+			<ViewProfileCard {...profile} isLiked={isLiked} onLikeToggle={onLikeToggle} />
 		</div>
 	);
 }

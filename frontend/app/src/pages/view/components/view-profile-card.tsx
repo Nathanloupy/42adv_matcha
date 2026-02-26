@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { likeUser, unlikeUser, blockUser, reportUser } from "@/services/api";
+import likeSvg from "@/assets/like.svg";
+import unlikeSvg from "@/assets/unlike.svg";
 import blockSvg from "@/assets/block.svg";
 import reportSvg from "@/assets/report.svg";
 import locationSvg from "@/assets/location-pin.svg";
@@ -35,6 +39,7 @@ function formatSexualPreference(pref: number): string {
 }
 
 export function ViewProfileCard({
+	id,
 	username,
 	firstname,
 	surname,
@@ -47,7 +52,9 @@ export function ViewProfileCard({
 	last_connection,
 	tags,
 	images,
-}: ViewProfile) {
+	isLiked,
+	onLikeToggle,
+}: ViewProfile & { isLiked: boolean; onLikeToggle: () => void }) {
 	const [pictureIndex, setPictureIndex] = useState(0);
 
 	const hasPictures = images.length > 0;
@@ -149,22 +156,30 @@ export function ViewProfileCard({
 					</div>
 				)}
 
-				<button
-					type="button"
-					className="absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
-					onClick={() => {}}
-					title="Block profile"
-				>
-					<img src={blockSvg} alt="Block profile" className="w-5 h-5 drop-shadow" />
-				</button>
-				<button
-					type="button"
-					className="absolute top-3 right-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
-					onClick={() => {}}
-					title="Report profile"
-				>
-					<img src={reportSvg} alt="Report profile" className="w-5 h-5 drop-shadow" />
-				</button>
+			<button
+				type="button"
+				className="absolute top-3 left-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
+				onClick={() => {
+					blockUser(id)
+						.then(() => toast.success("User blocked"))
+						.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to block"));
+				}}
+				title="Block profile"
+			>
+				<img src={blockSvg} alt="Block profile" className="w-5 h-5 drop-shadow" />
+			</button>
+			<button
+				type="button"
+				className="absolute top-3 right-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
+				onClick={() => {
+					reportUser(id)
+						.then(() => toast.success("User reported"))
+						.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to report"));
+				}}
+				title="Report profile"
+			>
+				<img src={reportSvg} alt="Report profile" className="w-5 h-5 drop-shadow" />
+			</button>
 
 				<div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10 flex items-end justify-between">
 					<span className="text-white font-bold text-2xl drop-shadow">
@@ -180,10 +195,49 @@ export function ViewProfileCard({
 
 			{/* Info panel */}
 			<div className="px-4 pt-3 pb-4 flex flex-col gap-2 bg-card shrink-0">
-				<div className="flex items-baseline gap-2">
-					<span className="font-semibold text-foreground">{firstname} {surname}</span>
-					<span className="text-sm text-muted-foreground">@{username}</span>
+			<div className="flex items-center justify-between gap-2">
+				<div className="flex items-baseline gap-2 min-w-0">
+					<span className="font-semibold text-foreground truncate">{firstname} {surname}</span>
+					<span className="text-sm text-muted-foreground shrink-0">@{username}</span>
 				</div>
+				{isLiked ? (
+					<button
+						type="button"
+						onClick={() => {
+							unlikeUser(id)
+								.then(() => { toast.success("Unliked"); onLikeToggle(); })
+								.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to unlike"));
+						}}
+						className="group shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-pink-400/60 bg-pink-500/10 text-xs font-medium text-pink-300 hover:bg-pink-500/20 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer"
+						aria-label="Unlike profile"
+					>
+						<img
+							src={unlikeSvg}
+							alt=""
+							className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-125 group-active:scale-125"
+						/>
+						Unlike
+					</button>
+				) : (
+					<button
+						type="button"
+						onClick={() => {
+							likeUser(id)
+								.then(() => { toast.success("Liked!"); onLikeToggle(); })
+								.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to like"));
+						}}
+						className="group shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-pink-400/40 text-xs font-medium text-pink-400 hover:bg-pink-500/10 hover:border-pink-400 hover:text-pink-300 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer"
+						aria-label="Like profile"
+					>
+						<img
+							src={likeSvg}
+							alt=""
+							className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-125 group-active:scale-125 group-hover:drop-shadow-[0_0_6px_rgba(244,114,182,0.8)] group-active:drop-shadow-[0_0_6px_rgba(244,114,182,0.8)]"
+						/>
+						Like
+					</button>
+				)}
+			</div>
 
 				{biography ? (
 					<p className="text-sm text-muted-foreground">{biography}</p>
@@ -222,17 +276,18 @@ export function ViewProfileCard({
 					</div>
 				)}
 
-				<span
-					className={cn(
-						"text-xs",
-						isOnline
-							? "text-green-400 font-medium"
-							: "text-muted-foreground/55",
-					)}
-				>
-					{isOnline ? lastConnectionText : `Last seen ${lastConnectionText}`}
-				</span>
+			<span
+				className={cn(
+					"text-xs",
+					isOnline
+						? "text-green-400 font-medium"
+						: "text-muted-foreground/55",
+				)}
+			>
+				{isOnline ? lastConnectionText : `Last seen ${lastConnectionText}`}
+			</span>
+
 			</div>
-		</div>
+	</div>
 	);
 }

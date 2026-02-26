@@ -10,6 +10,7 @@ interface LikesProfileCardProps {
 	isLikedByUser: boolean;
 	firstname: string;
 	image: string;
+	onAction: () => void;
 }
 
 export type { LikesProfileCardProps };
@@ -19,6 +20,7 @@ export function LikesProfileCard({
 	firstname,
 	isLikedByUser,
 	image,
+	onAction,
 }: LikesProfileCardProps) {
 	const navigate = useNavigate();
 
@@ -39,9 +41,9 @@ export function LikesProfileCard({
 					className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
 					onClick={(e) => {
 						e.stopPropagation();
-						unlikeUser(profileId)
-							.then(() => toast.success("Unliked"))
-							.catch((err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to unlike"));
+					unlikeUser(profileId)
+						.then(() => { toast.success("Unliked"); onAction(); })
+						.catch((err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to unlike"));
 					}}
 				>
 					<img
@@ -56,9 +58,9 @@ export function LikesProfileCard({
 				className="absolute top-2 left-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/35 hover:bg-black/55 transition-colors cursor-pointer"
 				onClick={(e) => {
 					e.stopPropagation();
-					blockUser(profileId)
-						.then(() => toast.success("User blocked"))
-						.catch((err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to block"));
+				blockUser(profileId)
+					.then(() => { toast.success("User blocked"); onAction(); })
+					.catch((err: unknown) => toast.error(err instanceof Error ? err.message : "Failed to block"));
 				}}
 			>
 				<img

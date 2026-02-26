@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { likeUser, blockUser, reportUser } from "@/services/api";
+import { likeUser, unlikeUser, blockUser, reportUser } from "@/services/api";
 import likeSvg from "@/assets/like.svg";
+import unlikeSvg from "@/assets/unlike.svg";
 import viewSvg from "@/assets/view.svg";
 import blockSvg from "@/assets/block.svg";
 import reportSvg from "@/assets/report.svg";
@@ -26,8 +27,10 @@ interface BrowseProfileCardProps {
 	lastConnection: string;
 	tagCount: number;
 	pictures?: string[];
+	isLiked: boolean;
 	onNext: () => void;
 	onView: () => void;
+	onLikeToggle: () => void;
 }
 
 export type { BrowseProfileCardProps };
@@ -63,8 +66,10 @@ export function BrowseProfileCard({
 	lastConnection,
 	tagCount,
 	pictures = [],
+	isLiked,
 	onNext,
 	onView,
+	onLikeToggle,
 }: BrowseProfileCardProps) {
 	const [pictureIndex, setPictureIndex] = useState(0);
 
@@ -280,21 +285,31 @@ export function BrowseProfileCard({
 				</span>
 
 				<div className="flex gap-3 pt-1">
+				{isLiked ? (
+					<button
+						type="button"
+						onClick={() => {
+							unlikeUser(id)
+								.then(() => { toast.success("Unliked"); onLikeToggle(); })
+								.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to unlike"));
+						}}
+						className="group flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-pink-400/60 bg-pink-500/10 text-sm font-medium text-pink-300 hover:bg-pink-500/20 hover:border-pink-400 hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer"
+						aria-label="Unlike profile"
+					>
+						<img
+							src={unlikeSvg}
+							alt=""
+							className="w-4 h-4 transition-transform duration-150 group-hover:scale-125 group-active:scale-125"
+						/>
+						Unlike
+					</button>
+				) : (
 					<button
 						type="button"
 						onClick={() => {
 							likeUser(id)
-								.then(() => {
-									toast.success("Liked!");
-									onNext();
-								})
-								.catch((e: unknown) =>
-									toast.error(
-										e instanceof Error
-											? e.message
-											: "Failed to like",
-									),
-								);
+								.then(() => { toast.success("Liked!"); onLikeToggle(); onNext(); })
+								.catch((e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to like"));
 						}}
 						className="group flex-1 flex items-center justify-center gap-2 py-2 rounded-md border border-pink-400/40 text-sm font-medium text-pink-400 hover:bg-pink-500/10 hover:border-pink-400 hover:text-pink-300 hover:scale-105 active:scale-95 active:bg-pink-500/10 active:border-pink-400 active:text-pink-300 transition-all duration-150 cursor-pointer"
 						aria-label="Like profile"
@@ -306,6 +321,7 @@ export function BrowseProfileCard({
 						/>
 						Like
 					</button>
+				)}
 					<button
 						type="button"
 						onClick={onView}

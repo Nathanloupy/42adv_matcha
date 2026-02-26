@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { cn } from "@/lib/utils";
 import catIcon from "@/assets/cat.svg";
@@ -8,6 +9,15 @@ import editIcon from "@/assets/edit.svg";
 
 export default function Footer() {
 	const { isAuthenticated, isAuthLoading } = useAuthContext();
+	const queryClient = useQueryClient();
+	const navigate = useNavigate();
+
+	function goToLikes() {
+		queryClient.invalidateQueries({ queryKey: ["me_likes"] });
+		queryClient.invalidateQueries({ queryKey: ["likes_me"] });
+		queryClient.invalidateQueries({ queryKey: ["views_me"] });
+		navigate("/likes");
+	}
 
 	return (
 		<footer className="bg-slate-950 py-3 text-sm border-t border-border">
@@ -20,9 +30,13 @@ export default function Footer() {
 				<Link to="/" className="flex justify-center">
 					<img src={catIcon} className="h-9" alt="Search" />
 				</Link>
-				<Link to="/likes" className="flex justify-center">
+				<button
+					type="button"
+					onClick={goToLikes}
+					className="flex justify-center cursor-pointer bg-transparent border-0 p-0"
+				>
 					<img src={heartIcon} className="h-7" alt="Likes" />
-				</Link>
+				</button>
 				<Link to="/messages" className="flex justify-center">
 					<img src={loveLetterIcon} className="h-7" alt="Messages" />
 				</Link>

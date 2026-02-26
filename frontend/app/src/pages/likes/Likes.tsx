@@ -1,13 +1,20 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Tab from "@/components/Tab";
 import { fetchMeLikes, fetchLikesMe, fetchViewsMe } from "@/services/api";
 import { LikesProfileCard } from "./components/likes-profile-card";
 
 type ActiveTab = "liked" | "likedYou" | "viewedYou";
 
+const QUERY_KEY: Record<ActiveTab, string> = {
+	liked: "me_likes",
+	likedYou: "likes_me",
+	viewedYou: "views_me",
+};
+
 export default function Likes() {
 	const [activeTab, setActiveTab] = useState<ActiveTab>("liked");
+	const queryClient = useQueryClient();
 
 	const meLikesQuery = useQuery({
 		queryKey: ["me_likes"],
@@ -32,6 +39,10 @@ export default function Likes() {
 				: viewsMeQuery;
 
 	const { data, isLoading, isError, error } = activeQuery;
+
+	function refetchActive() {
+		queryClient.invalidateQueries({ queryKey: [QUERY_KEY[activeTab]] });
+	}
 
 	return (
 		<div className="min-h-screen">
@@ -78,13 +89,14 @@ export default function Likes() {
 			{data && data.length > 0 && (
 				<div className="grid grid-cols-2">
 					{data.map((entry) => (
-					<LikesProfileCard
-						key={entry.id}
-						profileId={entry.id}
-						firstname={entry.firstname}
-						image={entry.image}
-						isLikedByUser={activeTab === "liked"}
-					/>
+				<LikesProfileCard
+					key={entry.id}
+					profileId={entry.id}
+					firstname={entry.firstname}
+					image={entry.image}
+					isLikedByUser={activeTab === "liked"}
+					onAction={refetchActive}
+				/>
 					))}
 				</div>
 			)}

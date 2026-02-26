@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { fetchBrowse } from "@/services/api";
+import { fetchBrowse, fetchMeLikes } from "@/services/api";
 import type { BrowseQueryParams } from "@/services/api";
 import { useOptionsContext } from "@/hooks/useOptionsContext";
 import { sortAndFilterProfiles } from "@/lib/sort-and-filter-profiles";
@@ -32,6 +32,11 @@ export function BrowseContent() {
 	const { data, isLoading, isError, error, isFetching } = useQuery({
 		queryKey: ["browse", browseParams],
 		queryFn: () => fetchBrowse(browseParams),
+	});
+
+	const { data: meLikes } = useQuery({
+		queryKey: ["me_likes"],
+		queryFn: fetchMeLikes,
 	});
 
 	// Apply frontend sort + filters on the raw data
@@ -139,13 +144,17 @@ export function BrowseContent() {
 	const profile = profiles[index];
 	if (!profile) return null;
 
+	const isLiked = meLikes?.some((e) => e.id === profile.id) ?? false;
+
 	return (
 		<BrowseProfileCard
 			key={profile.id}
 			{...profile}
 			pictures={profile.images}
+			isLiked={isLiked}
 			onNext={next}
 			onView={() => navigate(`/view?id=${profile.id}`)}
+			onLikeToggle={() => queryClient.invalidateQueries({ queryKey: ["me_likes"] })}
 		/>
 	);
 }
