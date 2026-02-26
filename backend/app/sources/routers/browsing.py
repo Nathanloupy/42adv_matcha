@@ -93,9 +93,9 @@ async def search(
 	tags: list[str] | None = Query(None),
 ):
 	query: str = """
-		SELECT * FROM users
+		SELECT users.* FROM users
 		LEFT JOIN users_blocks ON users.id = users_blocks.other_id
-			AND users_blocks.user_id = :current_user_id
+			AND users_blocks.user_id = :id
 		WHERE users.id != :id
 		AND users_blocks.id IS NULL
 		AND (gender = :gender1 OR gender = :gender2)
@@ -131,11 +131,13 @@ async def search(
 		if users is None:
 			raise HTTPException(status_code=404)
 		users: list = [dict(item._mapping) for item in users]
+
+		current_location = [float(item) for item in user.gps.split(",")]
 		if location:
 			current_location = [float(item) for item in location.split(",")]
-			for item in users:
-				item_location = [float(x) for x in item["gps"].split(",")]
-				item["distance"] = round(geodesic(current_location, item_location).kilometers, 2)
+		for item in users:
+			item_location = [float(x) for x in item["gps"].split(",")]
+			item["distance"] = round(geodesic(current_location, item_location).kilometers, 2)
 		if tags:
 			filtered_users = []
 			for item in users:
@@ -165,8 +167,8 @@ async def search(
 					images_by_users[key][index] = base64.b64encode(file.read()).decode()
 		for item in users:
 			item["images"] = images_by_users[item["id"]]
-			item.pop("password")
 			item.pop("email")
+			item.pop("password")
 		return users
 	except HTTPException:
 		raise
