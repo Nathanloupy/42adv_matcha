@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy import text, TextClause
 from sqlmodel import Session
 from pwdlib import PasswordHash
+from datetime import datetime
 
 from . import database
 
@@ -51,11 +52,12 @@ frontend_url: str = os.getenv("FONTEND_URL", "http://localhost:30001/")
 
 def get_user(session: session, request: Request) -> None | User:
 	token = request.cookies.get("access_token")
-	query: object			= text("SELECT * FROM users WHERE username = :username")
-	payload: dict | None	= None
-	username: str | None	= None
-	result: object | None	= None
-	user: object | None		= None
+	query: TextClause				= text("SELECT * FROM users WHERE username = :username")
+	query_connection: TextClause	= text("UPDATE users SET last_connection = :time WHERE username = :username")
+	payload: dict | None			= None
+	username: str | None			= None
+	result: object | None			= None
+	user: object | None				= None
 
 	try:
 		if token is None:
@@ -68,6 +70,8 @@ def get_user(session: session, request: Request) -> None | User:
 		user = result.fetchone()
 		if user is None:
 			raise HTTPException(status_code=404)
+		session.execute(query_connection, {"time": datetime.now(),"username": user.username})
+		session.commit()
 		return User(**user._mapping)
 	except HTTPException:
 		raise
