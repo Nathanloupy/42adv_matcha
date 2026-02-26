@@ -49,6 +49,7 @@ mail_config: ConnectionConfig = ConnectionConfig(
 )
 fast_mail: FastMail = FastMail(mail_config)
 frontend_url: str = os.getenv("FONTEND_URL", "http://localhost:30001/")
+ws_manager: dict = {}
 
 def get_user(session: session, request: Request) -> None | User:
 	token = request.cookies.get("access_token")

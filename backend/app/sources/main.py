@@ -6,6 +6,7 @@ from .routers import auth
 from .routers import users
 from .routers import browsing
 from .routers import profile
+from .routers import chat
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,6 +18,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(browsing.router)
 app.include_router(profile.router)
+app.include_router(chat.router)
 origins = ["http://localhost:30001"] #TODO: change for prod
 
 app.add_middleware(
