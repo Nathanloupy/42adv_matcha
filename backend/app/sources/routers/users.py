@@ -57,10 +57,10 @@ async def me(session: dependencies.session, user: dependencies.user):
 	return user
 
 @router.get(
-		"/users/me/me_views",
+		"/users/me/views_me",
 		tags=["users"],
 		)
-async def me_views(session: dependencies.session, user: dependencies.user):
+async def views_me(session: dependencies.session, user: dependencies.user):
 	query: str = """
 		SELECT users.id, users.username, users_images.uuid FROM users
 		LEFT JOIN users_views ON users.id = users_views.user_id
