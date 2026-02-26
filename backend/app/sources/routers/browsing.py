@@ -21,8 +21,15 @@ router: APIRouter = APIRouter()
     response_model_exclude={"password", "email"},
 	tags=["browsing"]
 )
-async def browse(session: dependencies.session, user: dependencies.user):
-	query: TextClause = text("""
+async def browse(
+	session: dependencies.session,
+	user: dependencies.user,
+	age_min: int | None = None,
+	age_max: int | None = None,
+	fame_min: int | None = None,
+	fame_max: int | None = None,
+):
+	query: TextClause = """
 		SELECT users.id, username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as common_tags_count FROM users
 		LEFT JOIN users_tags ON users.id = users_tags.user_id
 			AND users_tags.tag IN (
@@ -37,14 +44,21 @@ async def browse(session: dependencies.session, user: dependencies.user):
 		AND users_blocks.id IS NULL
 		AND completed == 1
 		AND (gender = :gender1 OR gender = :gender2)
-		GROUP BY users.id
-		ORDER BY common_tags_count DESC, fame DESC
-	""")
+	"""
 	params: dict = {"current_user_id": user.id, "username": user.username}
 
 	try:
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
+		if age_min and age_max:
+			query += " AND age >= :age_min AND age <= :age_max"
+			params["age_min"] = age_min
+			params["age_max"] = age_max
+		if fame_min and fame_max:
+			query += " AND fame >= :fame_min AND fame <= :fame_max"
+			params["fame_min"] = fame_min
+			params["fame_max"] = fame_max
+		query += " GROUP BY users.id ORDER BY common_tags_count DESC, fame DESC"
 		user_gps = [float(item) for item in user.gps.split(",")]
 		match user.sexual_preference:
 			case 0:
@@ -56,7 +70,7 @@ async def browse(session: dependencies.session, user: dependencies.user):
 			case 2:
 				params["gender1"] = user.gender
 				params["gender2"] = 0 if user.gender == 1 else 1
-		result = session.execute(query, params)
+		result = session.execute(text(query), params)
 		users = result.fetchall()
 		if users is None:
 			raise HTTPException(status_code=404)
@@ -93,9 +107,9 @@ async def search(
 	tags: list[str] | None = Query(None),
 ):
 	query: str = """
-		SELECT * FROM users
+		SELECT users.* FROM users
 		LEFT JOIN users_blocks ON users.id = users_blocks.other_id
-			AND users_blocks.user_id = :current_user_id
+			AND users_blocks.user_id = :id
 		WHERE users.id != :id
 		AND users_blocks.id IS NULL
 		AND (gender = :gender1 OR gender = :gender2)
@@ -131,11 +145,12 @@ async def search(
 		if users is None:
 			raise HTTPException(status_code=404)
 		users: list = [dict(item._mapping) for item in users]
+		current_location = [float(item) for item in user.gps.split(",")]
 		if location:
 			current_location = [float(item) for item in location.split(",")]
-			for item in users:
-				item_location = [float(x) for x in item["gps"].split(",")]
-				item["distance"] = round(geodesic(current_location, item_location).kilometers, 2)
+		for item in users:
+			item_location = [float(x) for x in item["gps"].split(",")]
+			item["distance"] = round(geodesic(current_location, item_location).kilometers, 2)
 		if tags:
 			filtered_users = []
 			for item in users:
@@ -165,8 +180,8 @@ async def search(
 					images_by_users[key][index] = base64.b64encode(file.read()).decode()
 		for item in users:
 			item["images"] = images_by_users[item["id"]]
-			item.pop("password")
 			item.pop("email")
+			item.pop("password")
 		return users
 	except HTTPException:
 		raise
