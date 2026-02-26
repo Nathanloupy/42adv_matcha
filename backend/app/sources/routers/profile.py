@@ -21,6 +21,7 @@ router: APIRouter = APIRouter()
 )
 async def view(session: dependencies.session, user: dependencies.user, id: int):
 	query: str = "SELECT * FROM users WHERE id = :id"
+	query_check_already: str = "SELECT COUNT(*) FROM users_views WHERE user_id = :user_id AND other_id = :id"
 	query_update_view: str = "INSERT INTO users_views (user_id, other_id) VALUES (:user_id, :id)"
 	params: dict = {"user_id": user.id, "id": id}
 	query_result: None | object = None
@@ -37,8 +38,11 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 		result = dict(user_profile._mapping)
 		result.pop("password")
 		result.pop("email")
-		query_result = session.execute(text(query_update_view), params)
-		session.commit()
+		result_check = session.execute(text(query_check_already), params)
+		count = result_check.fetchone()[0]
+		if count == 0:
+			session.execute(text(query_update_view), params)
+			session.commit()
 		return result
 	except HTTPException:
 		raise
@@ -51,7 +55,9 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 )
 async def like(session: dependencies.session, user: dependencies.user, id: int):
 	query: str = "INSERT INTO users_likes (user_id, other_id) VALUES (:user_id, :id)"
+	query_check_already: str = "SELECT COUNT(*) FROM users_likes WHERE user_id = :user_id AND other_id = :id"
 	query_check_connect: str = "SELECT * FROM users_likes WHERE user_id = :id AND other_id = :user_id"
+
 	params: dict = {"user_id": user.id, "id": id}
 
 	try:
@@ -59,14 +65,19 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 			raise HTTPException(status_code=400, detail="user can't like himself")
 		if user.completed == 0:
 			raise HTTPException(status_code=400, detail="user profile is not completed")
+		result = session.execute(text(query_check_already), params)
+		count = result.fetchone()[0]
+		if count > 0:
+			raise HTTPException(status_code=400, detail="user already liked this profile")
 		session.execute(text(query), params)
 		result = session.execute(text(query_check_connect), params)
 		result_count = result.fetchone()
 		if result_count is None:
+			session.commit()
 			return {"message": "ok"}
 		session.execute(text("INSERT INTO users_connected (user_id, other_id) VALUES (:user_id, :id)"), params)
 		session.commit()
-		return {"message": "ok"}
+		return {"message": "ok, users are now connected"}
 	except HTTPException:
 		session.rollback()
 		raise
