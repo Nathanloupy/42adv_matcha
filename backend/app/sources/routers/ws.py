@@ -22,8 +22,8 @@ async def ws(session: dependencies.session, websocket: WebSocket):
 		await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 		return
 
-	payload = verify_token(token)
-
+	payload = jwt.decode(token, jwt_secret, algorithms=[jwt_algorithm])
+	username = payload.get("sub")
 	if payload is None:
 		await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 		return

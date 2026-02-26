@@ -118,6 +118,7 @@ async def unlike(session: dependencies.session, user: dependencies.user, id: int
 		result = session.execute(text(query_check_connect), params)
 		result_count = result.fetchone()
 		if result_count is None:
+			session.commit()
 			return {"message": "ok"}
 		session.execute(text(query_unconnect), params)
 		session.commit()
