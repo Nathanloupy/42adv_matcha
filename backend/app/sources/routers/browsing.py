@@ -16,11 +16,7 @@ from .. import dependencies
 
 router: APIRouter = APIRouter()
 
-@router.get(
-	"/browse",
-    response_model_exclude={"password", "email"},
-	tags=["browsing"]
-)
+@router.get("/browse", tags=["browsing"])
 async def browse(
 	session: dependencies.session,
 	user: dependencies.user,
@@ -29,8 +25,8 @@ async def browse(
 	fame_min: int | None = None,
 	fame_max: int | None = None,
 ):
-	query: TextClause = """
-		SELECT users.id, username, firstname, surname, age, gender, biography, gps, fame, last_connection, COUNT(users_tags.id) as common_tags_count FROM users
+	query: str = """
+		SELECT users.*, COUNT(users_tags.id) as common_tags_count FROM users
 		LEFT JOIN users_tags ON users.id = users_tags.user_id
 			AND users_tags.tag IN (
 				SELECT tag FROM users_tags WHERE user_id = :current_user_id
@@ -85,15 +81,17 @@ async def browse(
 					images_by_users[key][index] = base64.b64encode(file.read()).decode()
 		for item in result:
 			item_coords = [float(item) for item in item["gps"].split(",")]
-			item["gps"] = round(geodesic(user_gps, item_coords).kilometers, 2)
+			item["distance"] = round(geodesic(user_gps, item_coords).kilometers, 2)
 			item["images"] = images_by_users[item["id"]]
+			item.pop("password")
+			item.pop("email")
 		result = random.sample(result, 10) if len(result) >= 10 else result
 		result.sort(key=lambda x: x["gps"])
 		return result
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400)
+		raise HTTPException(status_code=400, detail=str(exception))
 
 @router.get("/search", tags=["browsing"])
 async def search(
