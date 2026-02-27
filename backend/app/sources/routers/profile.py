@@ -93,6 +93,7 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 			session.commit()
 			return {"message": "ok"}
 		session.execute(text("INSERT INTO users_connected (user_id, other_id) VALUES (:user_id, :id)"), params)
+		session.execute(text("INSERT INTO users_connected (user_id, other_id) VALUES (:id, :user_id)"), params)
 		session.commit()
 		return {"message": "ok, users are now connected"}
 	except HTTPException:
