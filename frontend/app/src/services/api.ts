@@ -344,7 +344,7 @@ export interface ChatMessage {
 }
 
 export function fetchConnectedUsers(): Promise<ConnectedUser[]> {
-	return request("/me_connect");
+	return request("/users/me_connect");
 }
 
 export function fetchConversation(id: number): Promise<ChatMessage[]> {
