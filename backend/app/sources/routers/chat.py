@@ -59,6 +59,7 @@ async def chat(session: dependencies.session, user: dependencies.user, id: int, 
 			raise HTTPException(status_code=400, detail="users not connected")
 		session.execute(text(query), params)
 		session.commit()
+		await dependencies.ws_manager.send_to_user(id, f"NEW_CHAT,{user.id}")
 		return {"message": "ok"}
 	except HTTPException:
 		raise

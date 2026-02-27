@@ -59,6 +59,7 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 				with open(users_route.UPLOAD_PATH + item[2] + ".jpg", "rb") as file:
 					new_array.append(base64.b64encode(file.read()).decode())
 			result["images"] = new_array
+		await dependencies.ws_manager.send_to_user(id, f"NEW_VIEW,{user.id}")
 		return result
 	except HTTPException:
 		raise
@@ -88,12 +89,13 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 		session.execute(text(query), params)
 		result = session.execute(text(query_check_connect), params)
 		result_count = result.fetchone()
-		await dependencies.ws_manager.send_to_user(id, "NEW_LIKE")
+		await dependencies.ws_manager.send_to_user(id, f"NEW_LIKE,{user.id}")
 		if result_count is None:
 			session.commit()
 			return {"message": "ok"}
 		session.execute(text("INSERT INTO users_connected (user_id, other_id) VALUES (:user_id, :id)"), params)
 		session.execute(text("INSERT INTO users_connected (user_id, other_id) VALUES (:id, :user_id)"), params)
+		await dependencies.ws_manager.send_to_user(id, f"NEW_MATCH,{user.id}")
 		session.commit()
 		return {"message": "ok, users are now connected"}
 	except HTTPException:
@@ -125,6 +127,7 @@ async def unlike(session: dependencies.session, user: dependencies.user, id: int
 			return {"message": "ok"}
 		session.execute(text(query_unconnect), params)
 		session.execute(text(query_unconnect_2), params)
+		await dependencies.ws_manager.send_to_user(id, f"NEW_UNMATCH,{user.id}")
 		session.commit()
 		return {"message": "ok"}
 	except HTTPException:
