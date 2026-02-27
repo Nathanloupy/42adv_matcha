@@ -105,9 +105,12 @@ class ConnectionManager:
 		self.active_connections.pop(user_id, None)
 
 	async def send_to_user(self, user_id: int, message: str):
+		print('send_to_user()')
 		websocket = self.active_connections.get(user_id)
 		if websocket:
 			await websocket.send_text(message)
+		else:
+			print('else websocket')
 
 ws_manager = ConnectionManager()
 

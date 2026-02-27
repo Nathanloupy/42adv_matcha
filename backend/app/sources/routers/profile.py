@@ -88,7 +88,7 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 		session.execute(text(query), params)
 		result = session.execute(text(query_check_connect), params)
 		result_count = result.fetchone()
-		dependencies.ws_manager.send_to_user(id, "NEW_LIKE")
+		await dependencies.ws_manager.send_to_user(id, "NEW_LIKE")
 		if result_count is None:
 			session.commit()
 			return {"message": "ok"}

@@ -23,11 +23,11 @@ async def ws(session: dependencies.session, websocket: WebSocket):
 		await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 		return
 	payload = jwt.decode(token, dependencies.jwt_secret, algorithms=[dependencies.jwt_algorithm])
-	username = payload.get("sub")
-	if username is None:
+	user_id = payload.get("sub")
+	if user_id is None:
 		await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 		return
-	await dependencies.ws_manager.connect(username, websocket)
+	await dependencies.ws_manager.connect(int(user_id), websocket)
 	try:
 		while True:
 			await websocket.receive_text()
