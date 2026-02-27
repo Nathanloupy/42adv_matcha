@@ -171,6 +171,7 @@ async def me_connected(session: dependencies.session, user: dependencies.user):
 		LEFT JOIN users_connected ON users.id = users_connected.other_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
 		WHERE users_connected.user_id = :user_id
+		OR users_connected.other_id = :user_id
 	"""
 	params: dict = {"user_id": user.id}
 	query_result: None | object = None
@@ -189,7 +190,6 @@ async def me_connected(session: dependencies.session, user: dependencies.user):
 				continue
 			with open(UPLOAD_PATH + item["uuid"] + ".jpg", "rb") as file:
 				result[index]["image"] = base64.b64encode(file.read()).decode()
-
 		return result
 	except HTTPException:
 		raise
