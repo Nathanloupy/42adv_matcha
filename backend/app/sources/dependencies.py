@@ -77,8 +77,20 @@ def get_user(session: session, request: Request) -> None | User:
 		raise
 	except jwt.PyJWTError:
 		raise HTTPException(status_code=401)
-	except Exception as e:
-		raise HTTPException(status_code=400, detail=str(e))
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
+
+def get_user_blocks(_session: session, _user: User) -> list:
+	query: str = "SELECT other_id FROM users_blocks WHERE user_id = :user_id"
+
+	try:
+		result = _session.execute(text(query), {"user_id": _user.id})
+		q_result = result.fetchall()
+		if q_result is None:
+			return []
+		return [id[0] for id in q_result]
+	except Exception as exception:
+		raise HTTPException(status_code=400, detail=str(exception))
 
 user = Annotated[User, Depends(get_user)]
 
@@ -99,3 +111,4 @@ class ConnectionManager:
 			await websocket.send_text(message)
 
 ws_manager = ConnectionManager()
+
