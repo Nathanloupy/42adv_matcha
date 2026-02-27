@@ -167,7 +167,7 @@ async def likes_me(session: dependencies.session, user: dependencies.user):
 )
 async def me_connected(session: dependencies.session, user: dependencies.user):
 	query: str = """
-		SELECT users.id, users.username, users_images.uuid FROM users
+		SELECT users.id, users.firstname, users_images.uuid FROM users
 		LEFT JOIN users_connected ON users.id = users_connected.other_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
 		WHERE users_connected.user_id = :user_id
@@ -181,11 +181,15 @@ async def me_connected(session: dependencies.session, user: dependencies.user):
 		query_result = session.execute(text(query), params)
 		result = query_result.fetchall()
 		if result is None:
-			raise HTTPException(status_code=404)
+			return []
 		result = [dict(x._mapping) for x in result]
 		for index, item in enumerate(result):
+			if item["id"] in dependencies.get_user_blocks(session, user):
+				result.pop(index)
+				continue
 			with open(UPLOAD_PATH + item["uuid"] + ".jpg", "rb") as file:
 				result[index]["image"] = base64.b64encode(file.read()).decode()
+
 		return result
 	except HTTPException:
 		raise

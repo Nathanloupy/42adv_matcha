@@ -26,6 +26,8 @@ async def chat(session: dependencies.session, user: dependencies.user, id: int):
 	params: dict = {"user_id": user.id, "other_id": id}
 
 	try:
+		if id in dependencies.get_user_blocks(session, user):
+			raise HTTPException(status_code=400, detail="user blocked")
 		result = session.execute(text(query_check), params)
 		c_result = result.fetchone()[0]
 		if c_result == 0:
@@ -44,15 +46,17 @@ async def chat(session: dependencies.session, user: dependencies.user, id: int):
 
 @router.post("/chat", tags=["chat"])
 async def chat(session: dependencies.session, user: dependencies.user, id: int, message: str):
-	query: str = "INSERT INTO users_chats (user_id, other_id, time, value) VALUES (:user_id, :other_id, :time, :value)"
+	query: str = """INSERT INTO users_chats (user_id, other_id, time, value) VALUES (:user_id, :other_id, :time, :value)"""
 	query_check: str = "SELECT COUNT(*) FROM users_connected WHERE user_id = :user_id AND other_id = :other_id"
 	params: dict = {"user_id": user.id, "other_id": id, "time": datetime.now(), "value": message}
 
 	try:
+		if id in dependencies.get_user_blocks(session, user):
+			raise HTTPException(status_code=400, detail="user blocked")
 		result = session.execute(text(query_check), params)
 		c_result = result.fetchone()[0]
 		if c_result == 0:
-			raise HTTPException(status_code=400, detail="users are not connected")
+			raise HTTPException(status_code=400, detail="users not connected")
 		session.execute(text(query), params)
 		session.commit()
 		return {"message": "ok"}
