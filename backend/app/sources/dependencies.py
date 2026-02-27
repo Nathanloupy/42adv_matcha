@@ -48,7 +48,7 @@ mail_config: ConnectionConfig = ConnectionConfig(
 	USE_CREDENTIALS=True,
 )
 fast_mail: FastMail = FastMail(mail_config)
-frontend_url: str = os.getenv("FONTEND_URL", "http://localhost:30001/")
+frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:30001/")
 
 def get_user(session: session, request: Request) -> None | User:
 	token = request.cookies.get("access_token")
