@@ -14,7 +14,7 @@ from .. import dependencies
 
 router: APIRouter = APIRouter()
 
-@router.websocket("/ws", tags=["chat"])
+@router.websocket("/ws")
 async def ws(session: dependencies.session, websocket: WebSocket):
 	token = websocket.cookies.get("access_token")
 
