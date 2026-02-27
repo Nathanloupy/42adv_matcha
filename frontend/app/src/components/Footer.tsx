@@ -26,6 +26,11 @@ export default function Footer() {
 		navigate("/likes");
 	}
 
+	function goToMessages() {
+		queryClient.invalidateQueries({ queryKey: ["me_connect"] });
+		navigate("/messages");
+	}
+
 	return (
 		<footer className="bg-slate-950 py-3 text-sm border-t border-border">
 			<div
@@ -48,9 +53,13 @@ export default function Footer() {
 				>
 					<img src={heartIcon} className="h-7" alt="Likes" />
 				</button>
-				<Link to="/messages" className="flex justify-center">
-					<img src={loveLetterIcon} className="h-7" alt="Messages" />
-				</Link>
+			<button
+				type="button"
+				onClick={goToMessages}
+				className="flex justify-center cursor-pointer bg-transparent border-0 p-0"
+			>
+				<img src={loveLetterIcon} className="h-7" alt="Messages" />
+			</button>
 				<Link to="/profile" className="flex justify-center">
 					<img src={editIcon} className="h-7" alt="Profile" />
 				</Link>

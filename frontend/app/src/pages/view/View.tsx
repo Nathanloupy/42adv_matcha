@@ -31,6 +31,7 @@ export default function View() {
 
 	function onLikeToggle() {
 		queryClient.invalidateQueries({ queryKey: ["me_likes"] });
+		queryClient.invalidateQueries({ queryKey: ["me_connect"] });
 	}
 
 	if (id === null || Number.isNaN(id)) {
