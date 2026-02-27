@@ -118,6 +118,7 @@ export function resetPassword(data: ResetPasswordData): Promise<void> {
 // ── Profile ──
 
 export interface ProfileData {
+	id: number;
 	username: string;
 	email: string;
 	surname: string;
@@ -326,6 +327,33 @@ export interface ViewProfile {
 
 export function fetchUserView(id: number): Promise<ViewProfile> {
 	return request(`/view?id=${id}`);
+}
+
+// ── Chat ──
+
+export interface ConnectedUser {
+	id: number;
+	firstname: string;
+	image: string;
+}
+
+export interface ChatMessage {
+	user_id: number;
+	value: string;
+	time: string;
+}
+
+export function fetchConnectedUsers(): Promise<ConnectedUser[]> {
+	return request("/me_connect");
+}
+
+export function fetchConversation(id: number): Promise<ChatMessage[]> {
+	return request(`/chat?id=${id}`);
+}
+
+export function sendMessage(id: number, message: string): Promise<void> {
+	const params = new URLSearchParams({ id: String(id), message });
+	return request(`/chat?${params}`, { method: "POST" });
 }
 
 // ── Tags ──
