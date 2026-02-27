@@ -13,7 +13,9 @@ CONNECT_ARGS = {"check_same_thread": False}
 ENGINE = create_engine(DATABASE_URL, connect_args=CONNECT_ARGS)
 IMAGES_DIR = "./users_images"
 
-API_URL = f"https://api.thecatapi.com/v1/images/search?limit=10&api_key={os.getenv('CATAPI_TOKEN')}"
+API_URL = (
+	f"https://api.thecatapi.com/v1/images/search?api_key={os.getenv('CATAPI_TOKEN')}"
+)
 
 FIRST_NAMES = [
 	"Emma",
@@ -390,26 +392,79 @@ def initiliaze_database() -> None:
 		session.commit()
 
 
-def fetch_cat_images():
+def fetch_cat_images(limit: int = 100, page: int = 0) -> list[str]:
+	"""
+	Fetch cat image URLs from The Cat API.
+	  limit  1-100  Number of images per page
+	  page   0-n	Page index for pagination (requires API key for full effect)
+	  order  ASC	Stable ordering so different pages return different images
+	  mime_types jpg  Only return JPEG images (no GIFs or PNGs)
+	"""
+	params = {
+		"limit": limit,
+		"page": page,
+		"order": "ASC",
+		"mime_types": "jpg",
+	}
+	url = f"{API_URL}"
+	for k, v in params.items():
+		url += f"&{k}={v}"
 	try:
-		response = requests.get(API_URL, timeout=30)
+		response = requests.get(url, timeout=30)
 		if response.status_code == 200:
 			data = response.json()
-			return [img["url"] for img in data]
+			# Extra safety: keep only .jpg URLs
+			return [
+				img["url"]
+				for img in data
+				if img.get("url", "").lower().endswith(".jpg")
+			]
 	except Exception as e:
-		print(f"Failed to fetch cat images: {e}")
+		print(f"Failed to fetch cat images (page {page}): {e}")
 	return []
 
 
+def fetch_unique_cat_images(needed: int) -> list[str]:
+	"""
+	Fetch at least `needed` unique cat image URLs by paginating through the API.
+	Returns a deduplicated list; may return fewer than `needed` if the API
+	runs out of results.
+	"""
+	seen: set[str] = set()
+	urls: list[str] = []
+	page = 0
+	limit = 100
+
+	while len(urls) < needed:
+		batch = fetch_cat_images(limit=limit, page=page)
+		if not batch:
+			break
+		for url in batch:
+			if url not in seen:
+				seen.add(url)
+				urls.append(url)
+				if len(urls) >= needed:
+					break
+		page += 1
+
+	return urls
+
+
 def populate(session: Session, population: int = 50):
-	number_of_users = session.execute(text("SELECT COUNT(*) FROM USERS")).fetchone()[0] or 0
+	number_of_users = (
+		session.execute(text("SELECT COUNT(*) FROM USERS")).fetchone()[0] or 0
+	)
 	if number_of_users > 10:
 		print("Database already populated, skipping population...")
 		return
 
-	print("Fetching cat images...")
-	cat_urls = fetch_cat_images()
-	print(f"Got {len(cat_urls)} cat images")
+	max_images_per_user = 4
+	needed = population * max_images_per_user
+	print(f"Fetching {needed} unique cat images...")
+	cat_urls = fetch_unique_cat_images(needed)
+	print(f"Got {len(cat_urls)} unique cat images")
+
+	url_iter = iter(cat_urls)
 
 	max_user_id = session.execute(text("SELECT MAX(id) FROM users")).fetchone()[0] or 0
 	max_img_id = (
@@ -463,11 +518,11 @@ def populate(session: Session, population: int = 50):
 			},
 		)
 
-		num_images = random.randint(1, 4)
+		num_images = random.randint(1, max_images_per_user)
 		for j in range(num_images):
-			img_id = max_img_id + (i * 10 + j)
+			img_id = max_img_id + (i * max_images_per_user + j)
 			img_uuid = str(uuid.uuid4())
-			img_url = random.choice(cat_urls) if cat_urls else None
+			img_url = next(url_iter, None)
 
 			if img_url:
 				try:
@@ -476,6 +531,10 @@ def populate(session: Session, population: int = 50):
 						img_path = os.path.join(IMAGES_DIR, f"{img_uuid}.jpg")
 						with open(img_path, "wb") as f:
 							f.write(img_response.content)
+					else:
+						print(
+							f"Failed to download {img_url}: HTTP {img_response.status_code}"
+						)
 				except Exception as e:
 					print(f"Failed to download image: {e}")
 

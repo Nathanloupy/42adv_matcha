@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { checkAuth } from "@/services/api";
-import { AuthContext } from "@/contexts/authContext";
+import { AuthContext } from "@/contexts/auth-context";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const queryClient = useQueryClient();
@@ -12,6 +12,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		staleTime: Infinity,
 		retry: false,
 	});
+
+	useEffect(() => {
+		function handleUnauthorized() {
+			queryClient.setQueryData(["auth"], { ok: false, completed: false });
+		}
+		window.addEventListener("auth:unauthorized", handleUnauthorized);
+		return () => {
+			window.removeEventListener("auth:unauthorized", handleUnauthorized);
+		};
+	}, [queryClient]);
 
 	const isAuthenticated = data?.ok ?? false;
 	const isProfileCompleted = data?.completed ?? false;

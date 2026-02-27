@@ -14,8 +14,8 @@ import {
 	getBrowserLocation,
 	reverseGeocode,
 	geocodeAddress,
-} from "@/hooks/useGeolocation";
-import locationPinIcon from "@assets/location-pin.svg";
+} from "@/services/geolocation";
+import locationPinIcon from "@/assets/location-pin.svg";
 
 interface LocationCardProps {
 	initialGps: string;
