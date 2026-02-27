@@ -15,7 +15,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	useEffect(() => {
 		function handleUnauthorized() {
-			queryClient.setQueryData(["auth"], { ok: false, completed: false });
+			queryClient.clear();
 		}
 		window.addEventListener("auth:unauthorized", handleUnauthorized);
 		return () => {

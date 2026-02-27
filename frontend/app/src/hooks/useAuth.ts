@@ -74,10 +74,8 @@ export function useSignOut() {
 	const mutation = useMutation({
 		mutationFn: signOutApi,
 		onSuccess: () => {
-			queryClient.setQueryData(["auth"], { ok: false });
-			queryClient.removeQueries({ queryKey: ["profile"] });
-			queryClient.removeQueries({ queryKey: ["tags"] });
-			navigate("/");
+			queryClient.clear();
+			navigate("/signin");
 		},
 		onError: (err) => {
 			toast.error(toAuthError(err).message);
