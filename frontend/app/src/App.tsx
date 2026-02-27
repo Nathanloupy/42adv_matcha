@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Browse from "./pages/browse/Browse";
 import Messages from "./pages/messages/Messages";
@@ -17,6 +18,8 @@ import NotFound from "./pages/NotFound";
 import View from "./pages/view/View";
 
 export default function App() {
+	useWebSocket();
+
 	return (
 		<div className="h-screen flex flex-col">
 			<Header />
