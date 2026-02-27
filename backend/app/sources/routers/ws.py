@@ -18,6 +18,7 @@ router: APIRouter = APIRouter()
 async def ws(session: dependencies.session, websocket: WebSocket):
 	token = websocket.cookies.get("access_token")
 
+	await websocket.accept()
 	if not token:
 		await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 		return
