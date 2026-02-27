@@ -11,7 +11,7 @@ import { useImages } from "@/hooks/useImages";
 import deleteIcon from "@/assets/delete.svg";
 
 const MAX_IMAGES = 5;
-const ACCEPTED_TYPES = ".jpg";
+const ACCEPTED_TYPES = ".jpg,.jpeg,image/jpeg,image/png,image/webp";
 
 export function ImagesCard() {
 	const {

@@ -1,6 +1,7 @@
 import { useSearchParams, Link } from "react-router-dom";
 import { ResetPasswordForm } from "./components/reset-password-form";
 import { useResetPassword } from "@/hooks/useAuth";
+import { AuthPageLayout } from "@/components/AuthPageLayout";
 
 export default function ResetPassword() {
 	const [searchParams] = useSearchParams();
@@ -9,8 +10,8 @@ export default function ResetPassword() {
 
 	if (!token) {
 		return (
-			<div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
-				<div className="w-full max-w-sm text-center">
+			<AuthPageLayout>
+				<div className="text-center">
 					<h1 className="text-2xl font-bold">Invalid link</h1>
 					<p className="mt-2 text-muted-foreground">
 						This password reset link is invalid or has expired.
@@ -22,19 +23,17 @@ export default function ResetPassword() {
 						Request a new link
 					</Link>
 				</div>
-			</div>
+			</AuthPageLayout>
 		);
 	}
 
 	return (
-		<div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
-			<div className="w-full max-w-sm">
-				<ResetPasswordForm
-					onSubmit={resetPassword}
-					token={token}
-					isLoading={isLoading}
-				/>
-			</div>
-		</div>
+		<AuthPageLayout>
+			<ResetPasswordForm
+				onSubmit={resetPassword}
+				token={token}
+				isLoading={isLoading}
+			/>
+		</AuthPageLayout>
 	);
 }

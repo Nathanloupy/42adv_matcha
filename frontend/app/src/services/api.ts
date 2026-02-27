@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 export class ApiError extends Error {
 	status: number;
@@ -224,7 +224,7 @@ function toBrowseProfile(raw: Record<string, unknown>): BrowseProfile {
 	} as unknown as BrowseProfile;
 }
 
-// ── Browse ──
+// ── Browse Query Params ──
 
 export interface BrowseQueryParams {
 	ageMin: number;
@@ -316,17 +316,26 @@ export interface ViewProfile {
 	surname: string;
 	age: number;
 	gender: number;
-	sexual_preference: number;
+	sexualPreference: number;
 	biography: string;
 	gps: string;
 	fame: number;
-	last_connection: string;
+	lastConnection: string;
 	tags: string[];
 	images: string[];
 }
 
-export function fetchUserView(id: number): Promise<ViewProfile> {
-	return request(`/view?id=${id}`);
+function toViewProfile(raw: Record<string, unknown>): ViewProfile {
+	return {
+		...raw,
+		sexualPreference: raw.sexual_preference,
+		lastConnection: raw.last_connection,
+	} as unknown as ViewProfile;
+}
+
+export async function fetchUserView(id: number): Promise<ViewProfile> {
+	const raw = await request<Record<string, unknown>>(`/view?id=${id}`);
+	return toViewProfile(raw);
 }
 
 // ── Chat ──

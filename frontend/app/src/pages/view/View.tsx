@@ -1,6 +1,7 @@
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchUserView, fetchMeLikes } from "@/services/api";
+import { LoadingState, ErrorState } from "@/components/states";
 import { ViewProfileCard } from "./components/view-profile-card";
 
 export default function View() {
@@ -33,29 +34,15 @@ export default function View() {
 	}
 
 	if (id === null || Number.isNaN(id)) {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<span className="text-destructive">Invalid profile ID.</span>
-			</div>
-		);
+		return <ErrorState fallback="Invalid profile ID." />;
 	}
 
 	if (isLoading) {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<span className="text-muted-foreground">Loading profile...</span>
-			</div>
-		);
+		return <LoadingState message="Loading profile..." />;
 	}
 
 	if (isError) {
-		return (
-			<div className="flex items-center justify-center h-full">
-				<span className="text-destructive">
-					{error instanceof Error ? error.message : "Failed to load profile"}
-				</span>
-			</div>
-		);
+		return <ErrorState error={error} fallback="Failed to load profile" />;
 	}
 
 	if (!profile) return null;

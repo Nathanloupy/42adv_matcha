@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { ProfileForm } from "./components/profile-form";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { AuthPageLayout } from "@/components/AuthPageLayout";
 
 export default function Profile() {
 	const { isProfileCompleted } = useAuthContext();
@@ -44,16 +45,14 @@ export default function Profile() {
 	}
 
 	return (
-		<div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
-			<div className="w-full max-w-sm">
-				<ProfileForm
-					profile={profile}
-					onSubmit={updateProfile}
-					onUpdateLocation={updateLocation}
-					isLoading={isUpdating}
-					isLocationLoading={isUpdatingLocation}
-				/>
-			</div>
-		</div>
+		<AuthPageLayout>
+			<ProfileForm
+				profile={profile}
+				onSubmit={updateProfile}
+				onUpdateLocation={updateLocation}
+				isLoading={isUpdating}
+				isLocationLoading={isUpdatingLocation}
+			/>
+		</AuthPageLayout>
 	);
 }

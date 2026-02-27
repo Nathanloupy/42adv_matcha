@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Tab from "@/components/Tab";
 import { fetchMeLikes, fetchLikesMe, fetchViewsMe } from "@/services/api";
+import { InlineLoadingState, InlineErrorState, InlineEmptyState } from "@/components/states";
 import { LikesProfileCard } from "./components/likes-profile-card";
 
 type ActiveTab = "liked" | "likedYou" | "viewedYou";
@@ -45,7 +46,7 @@ export default function Likes() {
 	}
 
 	return (
-		<div className="min-h-screen">
+		<div>
 			<div className="flex flex-row items-center text-center">
 				<Tab
 					isActive={activeTab === "liked"}
@@ -66,37 +67,25 @@ export default function Likes() {
 				/>
 			</div>
 
-			{isLoading && (
-				<div className="flex items-center justify-center py-16">
-					<span className="text-muted-foreground">Loading...</span>
-				</div>
-			)}
+			{isLoading && <InlineLoadingState />}
 
-			{isError && (
-				<div className="flex items-center justify-center py-16">
-					<span className="text-destructive">
-						{error instanceof Error ? error.message : "Failed to load"}
-					</span>
-				</div>
-			)}
+			{isError && <InlineErrorState error={error} />}
 
 			{!isLoading && !isError && data?.length === 0 && (
-				<div className="flex items-center justify-center py-16">
-					<span className="text-muted-foreground">Nothing here yet.</span>
-				</div>
+				<InlineEmptyState title="Nothing here yet." />
 			)}
 
 			{data && data.length > 0 && (
 				<div className="grid grid-cols-2">
 					{data.map((entry) => (
-				<LikesProfileCard
-					key={entry.id}
-					profileId={entry.id}
-					firstname={entry.firstname}
-					image={entry.image}
-					isLikedByUser={activeTab === "liked"}
-					onAction={refetchActive}
-				/>
+						<LikesProfileCard
+							key={entry.id}
+							profileId={entry.id}
+							firstname={entry.firstname}
+							image={entry.image}
+							isLikedByUser={activeTab === "liked"}
+							onAction={refetchActive}
+						/>
 					))}
 				</div>
 			)}

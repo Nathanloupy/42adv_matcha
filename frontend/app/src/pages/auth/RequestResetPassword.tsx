@@ -1,17 +1,16 @@
 import { RequestResetPasswordForm } from "./components/request-reset-password-form";
 import { useRequestResetPassword } from "@/hooks/useAuth";
+import { AuthPageLayout } from "@/components/AuthPageLayout";
 
 export default function RequestResetPassword() {
 	const { requestResetPassword, isLoading } = useRequestResetPassword();
 
 	return (
-		<div className="flex min-h-full flex-col items-center justify-center p-6 md:p-10">
-			<div className="w-full max-w-sm">
-				<RequestResetPasswordForm
-					onSubmit={requestResetPassword}
-					isLoading={isLoading}
-				/>
-			</div>
-		</div>
+		<AuthPageLayout>
+			<RequestResetPasswordForm
+				onSubmit={requestResetPassword}
+				isLoading={isLoading}
+			/>
+		</AuthPageLayout>
 	);
 }

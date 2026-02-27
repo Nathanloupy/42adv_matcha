@@ -11,7 +11,11 @@ export default function ProtectedRoute({
 	const location = useLocation();
 
 	if (isAuthLoading) {
-		return null;
+		return (
+			<div className="flex items-center justify-center h-full">
+				<span className="text-muted-foreground">Loading...</span>
+			</div>
+		);
 	}
 
 	if (!isAuthenticated) {

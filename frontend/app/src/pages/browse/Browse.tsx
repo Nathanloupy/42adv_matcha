@@ -1,10 +1,9 @@
 import { useOptionsContext } from "@/hooks/useOptionsContext";
 import Tab from "@/components/Tab";
-import { BrowseContent } from "./components/browse-content";
-import { SearchContent } from "./components/search-content";
+import { ProfileListContent } from "./components/profile-list-content";
 
 export default function Browse() {
-	const { activeTab, setActiveTab, searchParams } = useOptionsContext();
+	const { activeTab, setActiveTab } = useOptionsContext();
 
 	return (
 		<div className="h-full w-full bg-slate-950 flex flex-col">
@@ -22,11 +21,7 @@ export default function Browse() {
 				/>
 			</div>
 			<div className="flex-1 min-h-0 p-2">
-				{activeTab === "browse" ? (
-					<BrowseContent />
-				) : (
-					<SearchContent searchParams={searchParams} />
-				)}
+				<ProfileListContent mode={activeTab} />
 			</div>
 		</div>
 	);

@@ -5,12 +5,20 @@ import { geocodeAddress } from "@/services/geolocation";
 import type { BrowseQueryParams, SearchParams } from "@/services/api";
 import { OptionsContext } from "@/contexts/options-context";
 import type { BrowseTab, SortField, SortDirection } from "@/contexts/options-context";
+import {
+	AGE_MIN,
+	AGE_MAX,
+	FAME_MIN,
+	FAME_MAX,
+	DEFAULT_MAX_DISTANCE,
+	DEFAULT_MIN_TAGS,
+} from "@/lib/constants";
 
 const defaultBrowseParams: BrowseQueryParams = {
-	ageMin: 3,
-	ageMax: 21,
-	fameMin: -1000,
-	fameMax: 1000,
+	ageMin: AGE_MIN,
+	ageMax: AGE_MAX,
+	fameMin: FAME_MIN,
+	fameMax: FAME_MAX,
 };
 
 const defaultSearchParams: SearchParams = {
@@ -33,10 +41,10 @@ interface CommittedState {
 const defaultCommitted: CommittedState = {
 	sortField: "none",
 	sortDirection: "asc",
-	ageRange: [3, 21],
-	fameRange: [-1000, 1000],
-	maxDistance: 100,
-	minTags: 0,
+	ageRange: [AGE_MIN, AGE_MAX],
+	fameRange: [FAME_MIN, FAME_MAX],
+	maxDistance: DEFAULT_MAX_DISTANCE,
+	minTags: DEFAULT_MIN_TAGS,
 	locationText: "",
 	selectedTags: [],
 };
@@ -45,13 +53,13 @@ export function OptionsProvider({ children }: { children: ReactNode }) {
 	const [activeTab, setActiveTab] = useState<BrowseTab>("browse");
 	const [sortField, setSortField] = useState<SortField>("none");
 	const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-	const [ageRange, setAgeRange] = useState([3, 21]);
-	const [fameRange, setFameRange] = useState([-1000, 1000]);
+	const [ageRange, setAgeRange] = useState([AGE_MIN, AGE_MAX]);
+	const [fameRange, setFameRange] = useState([FAME_MIN, FAME_MAX]);
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
 	const [locationText, setLocationText] = useState("");
 	const [isGeocoding, setIsGeocoding] = useState(false);
-	const [maxDistance, setMaxDistance] = useState(100);
-	const [minTags, setMinTags] = useState(0);
+	const [maxDistance, setMaxDistance] = useState(DEFAULT_MAX_DISTANCE);
+	const [minTags, setMinTags] = useState(DEFAULT_MIN_TAGS);
 
 	// Committed snapshots — only updated when the user clicks "Apply options"
 	const [browseParams, setBrowseParams] =

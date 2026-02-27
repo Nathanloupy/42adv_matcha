@@ -8,14 +8,17 @@ interface TabProps {
 
 export default function Tab({ isActive, name, onClick }: TabProps) {
 	return (
-		<div
+		<button
+			type="button"
+			role="tab"
+			aria-selected={isActive}
 			className={cn(
-				"flex-1 font-semibold px-2 py-4 text-foreground rounded-md text-center cursor-pointer",
+				"flex-1 font-semibold px-2 py-4 text-foreground rounded-md text-center cursor-pointer transition-opacity",
 				!isActive && "opacity-50",
 			)}
 			onClick={onClick}
 		>
 			{name}
-		</div>
+		</button>
 	);
 }

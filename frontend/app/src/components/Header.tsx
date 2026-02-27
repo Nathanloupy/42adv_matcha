@@ -4,6 +4,7 @@ import { useAuthContext } from "@/hooks/useAuthContext";
 import { useOptionsContext } from "@/hooks/useOptionsContext";
 import { fetchAllTags } from "@/services/api";
 import { cn } from "@/lib/utils";
+import { AGE_MIN, AGE_MAX, FAME_MIN, FAME_MAX, MAX_TAGS } from "@/lib/constants";
 import optionsIcon from "@/assets/options.svg";
 import increasingArrow from "@/assets/increasing-arrow.svg";
 import decreasingArrow from "@/assets/decreasing-arrow.svg";
@@ -185,8 +186,8 @@ function OptionsDropdown() {
 						id="search-age-range"
 						value={ageRange}
 						onValueChange={setAgeRange}
-						min={3}
-						max={21}
+						min={AGE_MIN}
+						max={AGE_MAX}
 						step={1}
 						className="w-full"
 					/>
@@ -206,8 +207,8 @@ function OptionsDropdown() {
 						id="search-fame-range"
 						value={fameRange}
 						onValueChange={setFameRange}
-						min={-1000}
-						max={1000}
+						min={FAME_MIN}
+						max={FAME_MAX}
 						step={1}
 						className="w-full"
 					/>
@@ -245,13 +246,18 @@ function OptionsDropdown() {
 						</span>
 					</div>
 
+					{/*
+					  * The slider is rendered RTL and its value is inverted (MAX_TAGS - minTags)
+					  * so the filled portion grows from the right as the minimum increases,
+					  * giving a "more restrictive = more filled" visual metaphor.
+					  */}
 					<Slider
 						id="search-min-tags"
 						dir="rtl"
-						value={[10 - minTags]}
-						onValueChange={(v) => setMinTags(10 - v[0])}
+						value={[MAX_TAGS - minTags]}
+						onValueChange={(v) => setMinTags(MAX_TAGS - v[0])}
 						min={0}
-						max={10}
+						max={MAX_TAGS}
 						step={1}
 						className="w-full"
 					/>

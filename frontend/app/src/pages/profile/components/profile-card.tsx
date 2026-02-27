@@ -9,6 +9,15 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { AGE_MIN, AGE_MAX } from "@/lib/constants";
 import type { ProfileData, UpdateProfileData } from "@/hooks/useProfile";
 
 interface ProfileCardProps {
@@ -23,7 +32,7 @@ export function ProfileCard({
 	isLoading,
 }: ProfileCardProps) {
 	const [email, setEmail] = useState(profile.email);
-	const [age, setAge] = useState(profile.age ?? 3);
+	const [age, setAge] = useState(profile.age ?? AGE_MIN);
 	const [firstname, setFirstname] = useState(profile.firstname);
 	const [surname, setSurname] = useState(profile.surname);
 	const [biography, setBiography] = useState(profile.biography ?? "");
@@ -47,7 +56,7 @@ export function ProfileCard({
 
 	const hasChanges =
 		email !== profile.email ||
-		age !== (profile.age ?? 3) ||
+		age !== (profile.age ?? AGE_MIN) ||
 		firstname !== profile.firstname ||
 		surname !== profile.surname ||
 		biography !== (profile.biography ?? "") ||
@@ -90,8 +99,8 @@ export function ProfileCard({
 								<Input
 									id="age"
 									type="number"
-									min={3}
-									max={30}
+									min={AGE_MIN}
+									max={AGE_MAX}
 									value={age}
 									onChange={(e) =>
 										setAge(Number(e.target.value))
@@ -132,55 +141,58 @@ export function ProfileCard({
 							<FieldLabel htmlFor="biography">
 								Biography
 							</FieldLabel>
-							<textarea
+							<Textarea
 								id="biography"
 								value={biography}
 								onChange={(e) => setBiography(e.target.value)}
 								rows={3}
 								maxLength={256}
-								className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none dark:bg-input/30"
 							/>
 						</Field>
 						<div className="grid grid-cols-2 gap-4">
 							<Field>
 								<FieldLabel htmlFor="gender">Gender</FieldLabel>
-								<select
-									id="gender"
+								<Select
 									value={gender ? "true" : "false"}
-									onChange={(e) =>
-										setGender(e.target.value === "true")
+									onValueChange={(v) =>
+										setGender(v === "true")
 									}
-									className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none dark:bg-input/30"
 								>
-									<option value="false">Male</option>
-									<option value="true">Female</option>
-								</select>
+									<SelectTrigger id="gender" className="w-full">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="false">Male</SelectItem>
+										<SelectItem value="true">Female</SelectItem>
+									</SelectContent>
+								</Select>
 							</Field>
 							<Field>
 								<FieldLabel htmlFor="sexual_preference">
 									Sexual preference
 								</FieldLabel>
-								<select
-									id="sexual_preference"
-									value={sexualPreference}
-									onChange={(e) =>
-										setSexualPreference(
-											Number(e.target.value),
-										)
+								<Select
+									value={String(sexualPreference)}
+									onValueChange={(v) =>
+										setSexualPreference(Number(v))
 									}
-									className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none dark:bg-input/30"
 								>
-									<option value={0}>Heterosexual</option>
-									<option value={1}>Homosexual</option>
-									<option value={2}>Bisexual</option>
-								</select>
+									<SelectTrigger id="sexual_preference" className="w-full">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="0">Heterosexual</SelectItem>
+										<SelectItem value="1">Homosexual</SelectItem>
+										<SelectItem value="2">Bisexual</SelectItem>
+									</SelectContent>
+								</Select>
 							</Field>
-					</div>
-					<Field>
-						<Button
-							type="submit"
-							disabled={isLoading || !hasChanges}
-						>
+						</div>
+						<Field>
+							<Button
+								type="submit"
+								disabled={isLoading || !hasChanges}
+							>
 								{isLoading ? "Saving..." : "Save changes"}
 							</Button>
 						</Field>

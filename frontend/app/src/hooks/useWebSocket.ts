@@ -1,59 +1,69 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { API_URL } from "@/services/api";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 const WS_URL = API_URL.replace(/^http/, "ws");
 
-const RECONNECT_DELAY_MS = 3000;
+const RECONNECT_DELAY_MS_BASE = 3000;
+const RECONNECT_DELAY_MS_MAX = 30000;
 
 export function useWebSocket() {
 	const { isAuthenticated } = useAuthContext();
-	const wsRef = useRef<WebSocket | null>(null);
-	const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const shouldConnectRef = useRef(false);
 
 	useEffect(() => {
-		shouldConnectRef.current = isAuthenticated;
+		if (!isAuthenticated) return;
 
-		if (!isAuthenticated) {
-			// Clean up any existing connection on logout
-			if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-			wsRef.current?.close();
-			wsRef.current = null;
-			return;
-		}
+		let cancelled = false;
+		let ws: WebSocket | null = null;
+		let timer: ReturnType<typeof setTimeout> | null = null;
+		let attempt = 0;
 
 		function connect() {
-			if (!shouldConnectRef.current) return;
+			if (cancelled) return;
 
-			const ws = new WebSocket(`${WS_URL}/ws`);
-			wsRef.current = ws;
+			ws = new WebSocket(`${WS_URL}/ws`);
 
 			ws.onmessage = (event: MessageEvent) => {
 				const data = String(event.data).trim();
 				if (data === "NEW_LIKE") {
 					toast.success("Someone liked your profile!");
+				} else if (data === "NEW_MESSAGE") {
+					// TODO: invalidate chat queries or show a notification
+					// when the backend starts sending this event
+					toast.info("New message received");
 				}
 			};
 
+			ws.onerror = () => {
+				// onerror always fires before onclose; logging is sufficient here
+				// since onclose handles reconnection
+				console.error("WebSocket error");
+			};
+
 			ws.onclose = (event: CloseEvent) => {
-				// Don't reconnect on intentional close (e.g. logout)
-				if (!shouldConnectRef.current) return;
-				// Reconnect unless the server explicitly rejected us (policy violation)
-				if (event.code !== 1008) {
-					reconnectTimerRef.current = setTimeout(connect, RECONNECT_DELAY_MS);
-				}
+				if (cancelled) return;
+				// Don't reconnect if the server explicitly rejected us (bad token)
+				if (event.code === 1008) return;
+				const delay = Math.min(
+					RECONNECT_DELAY_MS_BASE * 2 ** attempt,
+					RECONNECT_DELAY_MS_MAX,
+				);
+				attempt += 1;
+				timer = setTimeout(connect, delay);
+			};
+
+			ws.onopen = () => {
+				attempt = 0;
 			};
 		}
 
 		connect();
 
 		return () => {
-			shouldConnectRef.current = false;
-			if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-			wsRef.current?.close();
-			wsRef.current = null;
+			cancelled = true;
+			if (timer) clearTimeout(timer);
+			ws?.close();
 		};
 	}, [isAuthenticated]);
 }
