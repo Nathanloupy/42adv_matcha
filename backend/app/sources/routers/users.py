@@ -162,7 +162,7 @@ async def likes_me(session: dependencies.session, user: dependencies.user):
 		raise HTTPException(status_code=400, detail=str(exception))
 
 @router.get(
-	"/users/me_connect",
+	"/users/me_connected",
 	tags=["users"],
 )
 async def me_connected(session: dependencies.session, user: dependencies.user):
@@ -171,7 +171,6 @@ async def me_connected(session: dependencies.session, user: dependencies.user):
 		LEFT JOIN users_connected ON users.id = users_connected.other_id
 		LEFT JOIN users_images ON users.id = users_images.user_id
 		WHERE users_connected.user_id = :user_id
-		OR users_connected.other_id = :user_id
 	"""
 	params: dict = {"user_id": user.id}
 	query_result: None | object = None
