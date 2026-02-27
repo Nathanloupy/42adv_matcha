@@ -111,6 +111,7 @@ async def unlike(session: dependencies.session, user: dependencies.user, id: int
 	query: str = "DELETE FROM users_likes WHERE user_id = :user_id AND other_id = :id"
 	query_check_connect: str = "SELECT * FROM users_likes WHERE user_id = :id AND other_id = :user_id"
 	query_unconnect: str = "DELETE FROM users_connected WHERE user_id = :user_id AND other_id = :id"
+	query_unconnect_2: str = "DELETE FROM users_connected WHERE user_id = :id AND other_id = :user_id"
 	params: dict = {"user_id": user.id, "id": id}
 
 	try:
@@ -123,6 +124,7 @@ async def unlike(session: dependencies.session, user: dependencies.user, id: int
 			session.commit()
 			return {"message": "ok"}
 		session.execute(text(query_unconnect), params)
+		session.execute(text(query_unconnect_2), params)
 		session.commit()
 		return {"message": "ok"}
 	except HTTPException:
