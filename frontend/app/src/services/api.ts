@@ -323,6 +323,8 @@ export interface ViewProfile {
 	lastConnection: string;
 	tags: string[];
 	images: string[];
+	likedMe: boolean;
+	areConnected: boolean;
 }
 
 function toViewProfile(raw: Record<string, unknown>): ViewProfile {
@@ -330,6 +332,8 @@ function toViewProfile(raw: Record<string, unknown>): ViewProfile {
 		...raw,
 		sexualPreference: raw.sexual_preference,
 		lastConnection: raw.last_connection,
+		likedMe: raw.liked_me,
+		areConnected: raw.are_connected,
 	} as unknown as ViewProfile;
 }
 

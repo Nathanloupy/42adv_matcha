@@ -62,13 +62,13 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 					new_array.append(base64.b64encode(file.read()).decode())
 			result["images"] = new_array
 		result["liked_me"] = False
-		d_result = session.execute(query_check_like_me, params)
-		d_number = d_result.fetchone()
+		d_result = session.execute(text(query_check_like_me), params)
+		d_number = d_result.fetchone()[0]
 		if d_number != 0:
 			result["liked_me"] = True
 		result["are_connected"] = False
-		d_result = session.execute(query_connected, params)
-		d_number = d_result.fetchone()
+		d_result = session.execute(text(query_connected), params)
+		d_number = d_result.fetchone()[0]
 		if d_number != 0:
 			result["are_connected"] = True
 		await dependencies.ws_manager.send_to_user(id, f"NEW_VIEW,{user.id}")
@@ -76,7 +76,7 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400)
+		raise HTTPException(status_code=400, detail=str(exception))
 
 @router.post(
 	"/like",

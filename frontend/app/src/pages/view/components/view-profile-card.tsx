@@ -6,6 +6,7 @@ import { formatGps } from "@/lib/format-gps";
 import { cn } from "@/lib/utils";
 import locationSvg from "@/assets/location-pin.svg";
 import heartSvg from "@/assets/heart.svg";
+import { HeartHandshake, Heart } from "lucide-react";
 import type { ViewProfile } from "@/services/api";
 
 function formatSexualPreference(pref: number): string {
@@ -29,6 +30,8 @@ export function ViewProfileCard({
 	lastConnection,
 	tags,
 	images,
+	likedMe,
+	areConnected,
 	isLiked,
 	onLikeToggle,
 }: ViewProfile & { isLiked: boolean; onLikeToggle: () => void }) {
@@ -59,7 +62,26 @@ export function ViewProfileCard({
 							@{username}
 						</span>
 					</div>
-					<LikeButton id={id} isLiked={isLiked} onToggle={onLikeToggle} size="sm" />
+					<div className="flex items-center gap-2 shrink-0">
+						{areConnected ? (
+							<span
+								title="Connected"
+								className="flex items-center gap-1 text-xs text-pink-400"
+							>
+								<HeartHandshake className="w-4 h-4" />
+								Connected
+							</span>
+						) : likedMe ? (
+							<span
+								title="Liked you"
+								className="flex items-center gap-1 text-xs text-rose-400"
+							>
+								<Heart className="w-4 h-4" />
+								Liked you
+							</span>
+						) : null}
+						<LikeButton id={id} isLiked={isLiked} onToggle={onLikeToggle} size="sm" />
+					</div>
 				</div>
 
 				{biography ? (
