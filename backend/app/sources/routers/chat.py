@@ -42,7 +42,7 @@ async def chat(session: dependencies.session, user: dependencies.user, id: int):
 		raise
 	except Exception as exception:
 		session.rollback()
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.post("/chat", tags=["chat"])
 async def chat(session: dependencies.session, user: dependencies.user, id: int, message: str):
@@ -65,4 +65,4 @@ async def chat(session: dependencies.session, user: dependencies.user, id: int, 
 		raise
 	except Exception as exception:
 		session.rollback()
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)

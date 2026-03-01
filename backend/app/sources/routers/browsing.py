@@ -91,7 +91,7 @@ async def browse(
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.get("/search", tags=["browsing"])
 async def search(
@@ -184,4 +184,4 @@ async def search(
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)

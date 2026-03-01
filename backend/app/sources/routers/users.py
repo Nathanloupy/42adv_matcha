@@ -89,7 +89,7 @@ async def views_me(session: dependencies.session, user: dependencies.user):
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.get(
 	"/users/me/me_likes",
@@ -124,7 +124,7 @@ async def me_likes(session: dependencies.session, user: dependencies.user):
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.get(
 	"/users/me/likes_me",
@@ -159,7 +159,7 @@ async def likes_me(session: dependencies.session, user: dependencies.user):
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.get(
 	"/users/me_connected",
@@ -193,7 +193,7 @@ async def me_connected(session: dependencies.session, user: dependencies.user):
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.post(
 	"/users/report",
@@ -208,7 +208,7 @@ async def report(session: dependencies.session, user: dependencies.user, id: int
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.patch("/users/me", tags=["users"])
 async def me_patch(

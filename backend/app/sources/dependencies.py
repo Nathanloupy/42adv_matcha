@@ -78,7 +78,7 @@ def get_user(session: session, request: Request) -> None | User:
 	except jwt.PyJWTError:
 		raise HTTPException(status_code=401)
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 def get_user_blocks(_session: session, _user: User) -> list:
 	query: str = "SELECT other_id FROM users_blocks WHERE user_id = :user_id"
@@ -90,7 +90,7 @@ def get_user_blocks(_session: session, _user: User) -> list:
 			return []
 		return [id[0] for id in q_result]
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 user = Annotated[User, Depends(get_user)]
 

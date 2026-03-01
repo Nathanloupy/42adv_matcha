@@ -64,7 +64,7 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.post(
 	"/like",
@@ -103,7 +103,7 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 		raise
 	except Exception as exception:
 		session.rollback()
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.delete(
 	"/unlike",
@@ -133,7 +133,7 @@ async def unlike(session: dependencies.session, user: dependencies.user, id: int
 	except HTTPException:
 		raise
 	except Exception as exception:
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
 
 @router.post(
 	"/block",
@@ -161,4 +161,4 @@ async def block(session: dependencies.session, user: dependencies.user, id: int)
 		raise
 	except Exception as exception:
 		session.rollback()
-		raise HTTPException(status_code=400, detail=str(exception))
+		raise HTTPException(status_code=400)
