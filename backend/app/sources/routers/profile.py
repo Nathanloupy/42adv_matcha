@@ -86,6 +86,7 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 	query: str = "INSERT INTO users_likes (user_id, other_id) VALUES (:user_id, :id)"
 	query_check_already: str = "SELECT COUNT(*) FROM users_likes WHERE user_id = :user_id AND other_id = :id"
 	query_check_connect: str = "SELECT * FROM users_likes WHERE user_id = :id AND other_id = :user_id"
+	query_fame: str = "UPDATE users SET fame = fame + 1 WHERE id = :id"
 
 	params: dict = {"user_id": user.id, "id": id}
 
@@ -102,6 +103,7 @@ async def like(session: dependencies.session, user: dependencies.user, id: int):
 		result = session.execute(text(query_check_connect), params)
 		result_count = result.fetchone()
 		await dependencies.ws_manager.send_to_user(id, f"NEW_LIKE,{user.id}")
+		session.execute(text(query_fame), params)
 		if result_count is None:
 			session.commit()
 			return {"message": "ok"}
