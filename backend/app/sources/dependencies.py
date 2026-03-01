@@ -32,7 +32,7 @@ class User(BaseModel):
 
 jwt_secret: str = os.getenv("BACKEND_JWT_SECRET", "changeme")
 jwt_algorithm: str = os.getenv("BACKEND_JWT_ALGORITHM", "HS256")
-jwt_token_expire: int= int(os.getenv("BACKEND_JWT_TOKEN_EXPIRE", "10"))
+jwt_token_expire: int = int(os.getenv("BACKEND_JWT_TOKEN_EXPIRE", "10"))
 oauth2_scheme: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl="signin")
 password_hash: PasswordHash = PasswordHash.recommended()
 session = Annotated[Session, Depends(database.get_database_session)]
@@ -48,16 +48,19 @@ mail_config: ConnectionConfig = ConnectionConfig(
 	USE_CREDENTIALS=True,
 )
 fast_mail: FastMail = FastMail(mail_config)
-frontend_url: str = os.getenv("FRONTEND_URL", "http://localhost:30001/")
+_app_host: str = os.getenv("APP_HOST", "localhost")
+frontend_url: str = f"http://{_app_host}/"
 
 def get_user(session: session, request: Request) -> None | User:
 	token = request.cookies.get("access_token")
-	query: TextClause				= text("SELECT * FROM users WHERE id = :user_id")
-	query_connection: TextClause	= text("UPDATE users SET last_connection = :time WHERE username = :username")
-	payload: dict | None			= None
-	username: str | None			= None
-	result: object | None			= None
-	user: object | None				= None
+	query: TextClause = text("SELECT * FROM users WHERE id = :user_id")
+	query_connection: TextClause = text(
+		"UPDATE users SET last_connection = :time WHERE username = :username"
+	)
+	payload: dict | None = None
+	username: str | None = None
+	result: object | None = None
+	user: object | None = None
 
 	try:
 		if token is None:
@@ -70,7 +73,10 @@ def get_user(session: session, request: Request) -> None | User:
 		user = result.fetchone()
 		if user is None:
 			raise HTTPException(status_code=404)
-		session.execute(query_connection, {"time": datetime.now(timezone.utc),"username": user.username})
+		session.execute(
+			query_connection,
+			{"time": datetime.now(timezone.utc), "username": user.username},
+		)
 		session.commit()
 		return User(**user._mapping)
 	except HTTPException:
@@ -106,14 +112,13 @@ class ConnectionManager:
 
 	async def send_to_user(self, user_id: int, message: str):
 		try:
-			print('send_to_user()')
+			print("send_to_user()")
 			websocket = self.active_connections.get(user_id)
 			if websocket:
 				await websocket.send_text(message)
 			else:
-				print('else websocket')
+				print("else websocket")
 		except Exception as exception:
 			print(exception)
 
 ws_manager = ConnectionManager()
-

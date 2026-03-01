@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,9 +22,13 @@ app.include_router(browsing.router)
 app.include_router(profile.router)
 app.include_router(chat.router)
 app.include_router(ws.router)
-origins = ["http://localhost:30001",
-		   "http://k0r4p14:8000",
-		   "http://k0r4p14:30001"] #TODO: change for prod
+app_host: str = os.getenv("APP_HOST", "localhost")
+origins = [
+	f"http://{app_host}",
+	f"http://{app_host}:30001",
+	"http://localhost",
+	"http://localhost:30001",
+]
 
 app.add_middleware(
 	CORSMiddleware,

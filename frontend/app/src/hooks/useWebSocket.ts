@@ -3,9 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuthContext } from "@/hooks/useAuthContext";
-import { API_URL } from "@/services/api";
-
-const WS_URL = API_URL.replace(/^http/, "ws");
+const WS_URL = window.location.origin.replace(/^http/, "ws") + "/api";
 
 const RECONNECT_DELAY_MS_BASE = 3000;
 const RECONNECT_DELAY_MS_MAX = 30000;

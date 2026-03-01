@@ -6,6 +6,7 @@ import sqlite3
 from sqlalchemy import text
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 from datetime import datetime, timedelta
+from . import dependencies
 
 
 DATABASE_URL = f"sqlite:///includes/database.db"
@@ -475,7 +476,7 @@ def populate(session: Session, population: int = 50):
 		last_name = random.choice(LAST_NAMES)
 		username = f"{first_name.lower()}{last_name.lower()}{random.randint(0, 9999)}"
 		email = f"{username}@example.com"
-		password = str(random.randint(1000, 11000))
+		password = dependencies.password_hash.hash(str(random.randint(1000, 11000)))
 		age = random.randint(3, 13)
 		gender = random.randint(0, 1)
 		sexual_pref = random.randint(0, 2)
