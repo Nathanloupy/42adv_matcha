@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, Field
 from sqlalchemy import text, TextClause
 from sqlmodel import Session
-from datetime import datetime
+from datetime import datetime, timezone
 import jwt
 import random
 import base64
@@ -48,7 +48,7 @@ async def chat(session: dependencies.session, user: dependencies.user, id: int):
 async def chat(session: dependencies.session, user: dependencies.user, id: int, message: str):
 	query: str = """INSERT INTO users_chats (user_id, other_id, time, value) VALUES (:user_id, :other_id, :time, :value)"""
 	query_check: str = "SELECT COUNT(*) FROM users_connected WHERE user_id = :user_id AND other_id = :other_id"
-	params: dict = {"user_id": user.id, "other_id": id, "time": datetime.now(), "value": message}
+	params: dict = {"user_id": user.id, "other_id": id, "time": datetime.now(timezone.utc), "value": message}
 
 	try:
 		if id in dependencies.get_user_blocks(session, user):

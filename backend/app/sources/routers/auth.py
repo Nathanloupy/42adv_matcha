@@ -98,7 +98,7 @@ async def signin(session: dependencies.session, login: dependencies.oauth2_reque
 			samesite="strict",
 			max_age=dependencies.jwt_token_expire * 60,
 		)
-		session.execute(query_connection, {"time": datetime.now(),"username": user.username})
+		session.execute(query_connection, {"time": datetime.now(timezone.utc),"username": user.username})
 		session.commit()
 		return response
 	except HTTPException:

@@ -149,11 +149,7 @@ LAST_NAMES = [
 	"Robinson",
 	"Walker",
 	"Young",
-	"Allen",
-	"King",
-	"Wright",
-	"Scott",
-	"Torres",
+	"Allen",			# Extra safety: keep only .jpg URLs
 	"Nguyen",
 	"Hill",
 	"Flores",
@@ -388,7 +384,7 @@ def initiliaze_database() -> None:
 		""")
 		)
 		os.makedirs("users_images", exist_ok=True)
-		populate(session)
+		populate(session, 500)
 		session.commit()
 
 
@@ -413,7 +409,6 @@ def fetch_cat_images(limit: int = 100, page: int = 0) -> list[str]:
 		response = requests.get(url, timeout=30)
 		if response.status_code == 200:
 			data = response.json()
-			# Extra safety: keep only .jpg URLs
 			return [
 				img["url"]
 				for img in data

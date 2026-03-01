@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy import text, TextClause
 from sqlmodel import Session
 from pwdlib import PasswordHash
-from datetime import datetime
+from datetime import datetime, timezone
 
 from . import database
 
@@ -70,7 +70,7 @@ def get_user(session: session, request: Request) -> None | User:
 		user = result.fetchone()
 		if user is None:
 			raise HTTPException(status_code=404)
-		session.execute(query_connection, {"time": datetime.now(),"username": user.username})
+		session.execute(query_connection, {"time": datetime.now(timezone.utc),"username": user.username})
 		session.commit()
 		return User(**user._mapping)
 	except HTTPException:
@@ -105,12 +105,15 @@ class ConnectionManager:
 		self.active_connections.pop(user_id, None)
 
 	async def send_to_user(self, user_id: int, message: str):
-		print('send_to_user()')
-		websocket = self.active_connections.get(user_id)
-		if websocket:
-			await websocket.send_text(message)
-		else:
-			print('else websocket')
+		try:
+			print('send_to_user()')
+			websocket = self.active_connections.get(user_id)
+			if websocket:
+				await websocket.send_text(message)
+			else:
+				print('else websocket')
+		except Exception as exception:
+			print(exception)
 
 ws_manager = ConnectionManager()
 

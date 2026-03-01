@@ -4,6 +4,9 @@ export function formatLastConnection(raw: string): string {
 	const date = new Date(raw);
 	if (Number.isNaN(date.getTime())) return raw;
 
+	console.log(Date.now());
+	console.log(date.getTime());
+	console.log(Date.now() - date.getTime());
 	if (Date.now() - date.getTime() < FIVE_MINUTES_MS) {
 		return "Currently online";
 	}
