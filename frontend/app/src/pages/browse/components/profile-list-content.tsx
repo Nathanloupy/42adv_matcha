@@ -43,20 +43,14 @@ function BrowseListContent() {
 		queryFn: fetchMeLikes,
 	});
 
-	// Build a set of already-liked IDs for fast lookup
-	const likedIds = useMemo(
-		() => new Set((meLikes ?? []).map((e) => e.id)),
-		[meLikes],
-	);
-
-	// Apply frontend sort + filters, then remove already-liked profiles
+	// Apply frontend sort + filters
 	const profiles = useMemo(() => {
 		if (!data) return [];
 		return sortAndFilterProfiles(data, committedSort, {
 			maxDistance: committedMaxDistance,
 			minTags: committedMinTags,
-		}).filter((p) => !likedIds.has(p.id));
-	}, [data, committedSort, committedMaxDistance, committedMinTags, likedIds]);
+		});
+	}, [data, committedSort, committedMaxDistance, committedMinTags]);
 
 	// Prefetch next batch 2 profiles before the end
 	useEffect(() => {
@@ -141,9 +135,10 @@ function BrowseListContent() {
 			isLiked={isLiked}
 			onNext={next}
 			onView={() => navigate(`/view?id=${profile.id}`)}
-			onLikeToggle={() =>
-				queryClient.invalidateQueries({ queryKey: ["me_likes"] })
-			}
+			onLikeToggle={() => {
+				queryClient.invalidateQueries({ queryKey: ["me_likes"] });
+				next();
+			}}
 		/>
 	);
 }
