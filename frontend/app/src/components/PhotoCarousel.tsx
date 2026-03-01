@@ -117,8 +117,8 @@ export function PhotoCarousel({
 					{firstname}, {age}
 				</span>
 				<img
-					src={gender === 0 ? femaleSvg : maleSvg}
-					alt={gender === 0 ? "Female" : "Male"}
+				src={gender === 1 ? femaleSvg : maleSvg}
+				alt={gender === 1 ? "Female" : "Male"}
 					className="w-7 h-7 drop-shadow invert"
 				/>
 			</div>

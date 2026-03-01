@@ -81,7 +81,12 @@ export default function Conversation() {
 				</button>
 
 				{otherUser ? (
-					<>
+					<button
+						type="button"
+						onClick={() => navigate(`/view?id=${otherId}`)}
+						className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+						aria-label={`View ${otherUser.firstname}'s profile`}
+					>
 						{otherUser.image ? (
 							<img
 								src={`data:image/jpeg;base64,${otherUser.image}`}
@@ -98,7 +103,7 @@ export default function Conversation() {
 						<span className="font-semibold text-foreground">
 							{otherUser.firstname}
 						</span>
-					</>
+					</button>
 				) : (
 					<span className="font-semibold text-foreground">Conversation</span>
 				)}

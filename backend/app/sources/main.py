@@ -21,7 +21,9 @@ app.include_router(browsing.router)
 app.include_router(profile.router)
 app.include_router(chat.router)
 app.include_router(ws.router)
-origins = ["http://localhost:30001"] #TODO: change for prod
+origins = ["http://localhost:30001",
+		   "http://k0r4p14:8000",
+		   "http://k0r4p14:30001"] #TODO: change for prod
 
 app.add_middleware(
 	CORSMiddleware,
