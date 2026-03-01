@@ -447,9 +447,8 @@ def fetch_unique_cat_images(needed: int) -> list[str]:
 
 
 def populate(session: Session, population: int = 50):
-	number_of_users = (
-		session.execute(text("SELECT COUNT(*) FROM USERS")).fetchone()[0] or 0
-	)
+	number_of_users = session.execute(text("SELECT COUNT(*) FROM users")).fetchone()[0]
+	print(number_of_users)
 	if number_of_users > 10:
 		print("Database already populated, skipping population...")
 		return
@@ -463,12 +462,8 @@ def populate(session: Session, population: int = 50):
 	url_iter = iter(cat_urls)
 
 	max_user_id = session.execute(text("SELECT MAX(id) FROM users")).fetchone()[0] or 0
-	max_img_id = (
-		session.execute(text("SELECT MAX(id) FROM users_images")).fetchone()[0] or 0
-	)
-	max_tag_id = (
-		session.execute(text("SELECT MAX(id) FROM users_tags")).fetchone()[0] or 0
-	)
+	max_img_id = session.execute(text("SELECT MAX(id) FROM users_images")).fetchone()[0] or 0
+	max_tag_id = session.execute(text("SELECT MAX(id) FROM users_tags")).fetchone()[0] or 0
 
 	for i in range(1, population + 1):
 		user_id = max_user_id + i

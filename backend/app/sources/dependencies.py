@@ -49,7 +49,7 @@ mail_config: ConnectionConfig = ConnectionConfig(
 )
 fast_mail: FastMail = FastMail(mail_config)
 _app_host: str = os.getenv("APP_HOST", "localhost")
-frontend_url: str = f"http://{_app_host}/"
+frontend_url: str = f"http://{_app_host}:30001/"
 
 def get_user(session: session, request: Request) -> None | User:
 	token = request.cookies.get("access_token")

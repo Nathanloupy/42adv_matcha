@@ -11,7 +11,11 @@ services:
       interval: 30s
       timeout: 100s
       retries: 5
-      start_period: 60s
+      start_period: 30s
+    volumes:
+      - db_data:/app/includes
+      - img_data:/app/users_images
+
   frontend:
     container_name: frontend
     build:
@@ -29,3 +33,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+volumes:
+  db_data:
+  img_data:
