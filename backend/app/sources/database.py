@@ -448,7 +448,6 @@ def fetch_unique_cat_images(needed: int) -> list[str]:
 
 def populate(session: Session, population: int = 50):
 	number_of_users = session.execute(text("SELECT COUNT(*) FROM users")).fetchone()[0]
-	print(number_of_users)
 	if number_of_users > 10:
 		print("Database already populated, skipping population...")
 		return

@@ -9,7 +9,7 @@ services:
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8000/"]
       interval: 30s
-      timeout: 100s
+      timeout: 200s
       retries: 5
       start_period: 30s
     volumes:
