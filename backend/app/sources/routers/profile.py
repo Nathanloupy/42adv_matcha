@@ -23,6 +23,7 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 	query: str = "SELECT * FROM users WHERE id = :id"
 	query_tags: str = "SELECT * FROM users_tags WHERE user_id = :id"
 	query_images: str = "SELECT * FROM users_images WHERE user_id = :id"
+	query_check_like_me: str = "SELECT COUNT(*) FROM users_likes WHERE user_id = :id AND other_id = :user_id"
 	query_connected: str = "SELECT COUNT(*) FROM users_connected WHERE user_id = :user_id AND other_id = :id"
 	query_check_already: str = "SELECT COUNT(*) FROM users_views WHERE user_id = :user_id AND other_id = :id"
 	query_update_view: str = "INSERT INTO users_views (user_id, other_id) VALUES (:user_id, :id)"
@@ -60,12 +61,17 @@ async def view(session: dependencies.session, user: dependencies.user, id: int):
 				with open(users_route.UPLOAD_PATH + item[2] + ".jpg", "rb") as file:
 					new_array.append(base64.b64encode(file.read()).decode())
 			result["images"] = new_array
-		await dependencies.ws_manager.send_to_user(id, f"NEW_VIEW,{user.id}")
+		result["liked_me"] = False
+		d_result = session.execute(query_check_like_me, params)
+		d_number = d_result.fetchone()
+		if d_number != 0:
+			result["liked_me"] = True
+		result["are_connected"] = False
 		d_result = session.execute(query_connected, params)
 		d_number = d_result.fetchone()
-		if d_number == 0:
-			result["are_connected"] = False
-		result["are_connected"] = True
+		if d_number != 0:
+			result["are_connected"] = True
+		await dependencies.ws_manager.send_to_user(id, f"NEW_VIEW,{user.id}")
 		return result
 	except HTTPException:
 		raise
